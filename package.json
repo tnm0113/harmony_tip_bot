@@ -1,0 +1,25 @@
+{
+  "name": "hamorny_tip_bot",
+  "version": "1.0.0",
+  "description": "harmony one reddit tip bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ONE"
+  ],
+  "author": "tnm0113",
+  "license": "ISC",
+  "dependencies": {
+    "@harmony-js/account": "^0.1.57",
+    "@harmony-js/network": "^0.1.56",
+    "@harmony-js/utils": "^0.1.56",
+    "snoostorm": "^1.5.2",
+    "snoowrap": "^1.23.0"
+  },
+  "type": "module",
+  "devDependencies": {
+    "tslib": "^2.2.0"
+  }
+}
