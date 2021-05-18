@@ -1,6 +1,19 @@
 import { InboxStream, CommentStream, SubmissionStream } from "snoostorm";
 import Snoowrap from "snoowrap";
 
+import { Account, Wallet } from "@harmony-js/account";
+import { Messenger, HttpProvider } from "@harmony-js/network";
+import { ChainID, ChainType, Unit } from "@harmony-js/utils";
+import { TransactionFactory } from "@harmony-js/transaction";
+import { Harmony } from "@harmony-js/core";
+
+const hmy = new Harmony("https://api.s0.b.hmny.io/", {
+  chainType: ChainType.Harmony,
+  chainId: ChainID.HmyTestnet,
+});
+
+const wallet = new Wallet(hmy);
+
 import config from "./credentials.js";
 // const creds = require("./credentials.json");
 
@@ -24,18 +37,44 @@ const client = new Snoowrap(config);
 // const options = new InboxStreamOptions({filter: "mentio})
 
 const inbox = new InboxStream(client, {
-  filter: "mentions",
+  filter: "mentions" | "messages",
   limit: 0,
   pollTime: 2000,
 });
+
+async function sendMessage(to, subject, text){
+    await client.composeMessage({to: to, subject: subject, text: text});
+}
+
 inbox.on("item", function (item) {
-  let c = client.getComment(item.parent_id);
-  c.author.then((a) => {
-    console.log("author ", a.name);
-  });
-  c.body.then((b) => {
-    console.log("body ", b);
-  });
+    if (item.was_comment){
+        console.log('receive comment mention from ', item.author)
+        let c = client.getComment(item.parent_id);
+        c.author.then((a) => {
+            console.log("author ", a.name);
+        });
+        c.body.then((b) => {
+            console.log("body ", b);
+        });
+    } else {
+        console.log('receive private message from ', item.author)        
+        if (item.body === "create"){
+            console.log('receive request create new address');
+            let mn = Wallet.generateMnemonic();
+            console.log('create mnemonic ', mn);
+            console.log('create account');
+            let account = hmy.wallet.addByMnemonic(mn);
+            console.log('account address ', account.bech32Address);
+            // client.composeMessage({
+            //     to: item.author,
+            //     subject: "Wallet Address",
+            //     text: "Here is your address " + account.bech32Address + " and eth version " + account.address
+            // }).then()
+            let text = "Here is your address " + account.bech32Address + " and eth version " + account.address;
+            sendMessage(item.author, "Wallet Address", text);
+        }
+    }
+    console.log('item ', item);
 });
 
 // inbox.end();
