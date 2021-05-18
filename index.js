@@ -23,8 +23,20 @@ const client = new Snoowrap(config);
 
 // const options = new InboxStreamOptions({filter: "mentio})
 
-const inbox = new InboxStream(client, { filter: "mentions", limit: 10, pollTime: 2000});
-inbox.on("item", console.log);
+const inbox = new InboxStream(client, {
+  filter: "mentions",
+  limit: 0,
+  pollTime: 2000,
+});
+inbox.on("item", function (item) {
+  let c = client.getComment(item.parent_id);
+  c.author.then((a) => {
+    console.log("author ", a.name);
+  });
+  c.body.then((b) => {
+    console.log("body ", b);
+  });
+});
 
 // inbox.end();
 inbox.on("end", () => console.log("And now my watch has ended"));
