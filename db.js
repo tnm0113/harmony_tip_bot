@@ -1,4 +1,5 @@
-import { Sequelize, DataTypes } from "sequelize";
+import pkg from "sequelize";
+const { Sequelize, DataTypes } = pkg;
 
 const sequelize = new Sequelize({
   dialect: "sqlite",
@@ -15,7 +16,8 @@ try {
 const User = sequelize.define('User', {
     id: {
         type: DataTypes.UUIDV4,
-        defaultValue: Sequelize.UUIDV4
+        defaultValue: Sequelize.UUIDV4,
+        primaryKey: true
     },
     username: {
         type: DataTypes.STRING,
@@ -37,3 +39,15 @@ const User = sequelize.define('User', {
 
 await User.sync({ force: true });
 
+const createUser = (username, ethAddress, oneAddress, balance) => {
+  console.log('create user');
+  User.create({username: username, ethAddress: ethAddress, oneAddress, balance: balance});
+}
+
+const findUser = async (username) => {
+  const u = await User.findOne({ where: { username: username}});
+  return u;
+}
+
+// module.exports = createUser;
+export { createUser, findUser, User };

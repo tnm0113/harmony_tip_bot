@@ -6,7 +6,7 @@ import { Messenger, HttpProvider } from "@harmony-js/network";
 import { ChainID, ChainType, Unit } from "@harmony-js/utils";
 import { TransactionFactory } from "@harmony-js/transaction";
 import { Harmony } from "@harmony-js/core";
-
+import { createUser, findUser, User } from './db.js';
 const hmy = new Harmony("https://api.s0.b.hmny.io/", {
   chainType: ChainType.Harmony,
   chainId: ChainID.HmyTestnet,
@@ -59,19 +59,25 @@ inbox.on("item", function (item) {
     } else {
         console.log('receive private message from ', item.author)        
         if (item.body === "create"){
-            console.log('receive request create new address');
-            let mn = Wallet.generateMnemonic();
-            console.log('create mnemonic ', mn);
-            console.log('create account');
-            let account = hmy.wallet.addByMnemonic(mn);
-            console.log('account address ', account.bech32Address);
-            // client.composeMessage({
-            //     to: item.author,
-            //     subject: "Wallet Address",
-            //     text: "Here is your address " + account.bech32Address + " and eth version " + account.address
-            // }).then()
-            let text = "Here is your address " + account.bech32Address + " and eth version " + account.address;
-            sendMessage(item.author, "Wallet Address", text);
+            if (findUser(item.author)){
+                console.log('user already existed');
+            } else {
+                console.log('receive request create new address');
+                let mn = Wallet.generateMnemonic();
+                console.log('create mnemonic ', mn);
+                console.log('create account');
+                let account = hmy.wallet.addByMnemonic(mn);
+                console.log('account address ', account.bech32Address);
+                // client.composeMessage({
+                //     to: item.author,
+                //     subject: "Wallet Address",
+                //     text: "Here is your address " + account.bech32Address + " and eth version " + account.address
+                // }).then()
+                let text = "Here is your address " + account.bech32Address + " and eth version " + account.address;
+                sendMessage(item.author, "Wallet Address", text);
+                createUser(item.author, account.address, account.bech32Address, 0);
+                
+            }
         }
     }
     console.log('item ', item);
