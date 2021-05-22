@@ -44,36 +44,43 @@ inbox.on("item", function (item) {
           findUser(item.author.name).then((sendUser) => {
             let sendUserMn = sendUser.mnemonic;
             console.log('sendUserMn ', sendUserMn);
-            findUser(c.author.name).then((toUser) => {
-              let addressTo = toUser.oneAddress;
-              hmy.wallet.addByMnemonic(sendUserMn);
-              let txn = hmy.transactions.newTx({
-                to: addressTo,
-                value: new Unit(amount).asOne().toWei(),
-                // gas limit, you can use string
-                gasLimit: "21000",
-                // send token from shardID
-                shardID: 0,
-                // send token to toShardID
-                toShardID: 0,
-                // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
-                gasPrice: new Unit("1").asGwei().toWei(),
-              });
-              hmy.wallet.signTransaction(txn).then((signedTxn) => {
-                signedTxn.sendTransaction().then(([tx, hash]) => {
-                  console.log("tx hash: " + hash);
-                  signedTxn.confirm(hash).then((response) => {
-                    console.log('receipt ',response.receipt);
-                    item.reply("You have tipped successfully !!!")
+            c.author.then((author) => {
+              findUser(author.name).then((toUser) => {
+                let addressTo = toUser.oneAddress;
+                hmy.wallet.addByMnemonic(sendUserMn);
+                let txn = hmy.transactions.newTx({
+                  to: addressTo,
+                  value: new Unit(amount).asOne().toWei(),
+                  // gas limit, you can use string
+                  gasLimit: "21000",
+                  // send token from shardID
+                  shardID: 0,
+                  // send token to toShardID
+                  toShardID: 0,
+                  // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
+                  gasPrice: new Unit("1").asGwei().toWei(),
+                });
+                hmy.wallet.signTransaction(txn).then((signedTxn) => {
+                  signedTxn.sendTransaction().then(([tx, hash]) => {
+                    console.log("tx hash: " + hash);
+                    signedTxn.confirm(hash).then((response) => {
+                      console.log('receipt ',response.receipt);
+                      item.reply("You have tipped successfully !!!")
+                      hmy.wallet.removeAccount(sendUser.ethAddress);
+                    }).catch(e => {
+                      console.log('confirm signed tx error ', e);
+                    });
+                  }).catch(e => {
+                    console.log('send error ', e);
                   });
                 }).catch(e => {
-                  console.log('send error ', e);
+                  console.log('sign err ', e);
                 });
               }).catch(e => {
-                console.log('sign err ', e);
-              });
+                console.log('db err ',e)
+              })
             }).catch(e => {
-              console.log('db err ',e)
+              console.log('get author name err ', e);
             })
           }).catch((e) => {
             console.log('find user error ', e);
