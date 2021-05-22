@@ -45,7 +45,8 @@ const factory = new TransactionFactory(hmy);
 hmy.wallet.addByMnemonic(mn1);
 
 const txn = hmy.transactions.newTx({
-  to: "one14nt2lnn0jssxxpvmelmpxrvuktamr3ahhud8j4",
+  // to: "one14nt2lnn0jssxxpvmelmpxrvuktamr3ahhud8j4",
+  to: "one1j4792efsaqm8xf04erfwzcucxz3z5dq7yx90wf",
   value: new Unit(100).asOne().toWei(),
   // gas limit, you can use string
   gasLimit: "21000",

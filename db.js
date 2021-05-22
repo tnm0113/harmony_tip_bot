@@ -35,17 +35,22 @@ const User = sequelize.define("User", {
     type: DataTypes.DOUBLE,
     defaultValue: 0.0,
   },
+  mnemonic: {
+    type: DataTypes.STRING,
+    allowNull: false
+  }
 });
 
 User.sync({});
 
-const createUser = (username, ethAddress, oneAddress, balance) => {
+const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
   console.log("create user");
   return User.create({
     username: username,
     ethAddress: ethAddress,
-    oneAddress,
+    oneAddress: oneAddress,
     balance: balance,
+    mnemonic: mnemonic
   })
     .then((u) => {
       return u;

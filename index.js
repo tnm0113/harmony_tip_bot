@@ -6,7 +6,7 @@ import { Messenger, HttpProvider } from "@harmony-js/network";
 import { ChainID, ChainType, Unit } from "@harmony-js/utils";
 import { TransactionFactory } from "@harmony-js/transaction";
 import { Harmony } from "@harmony-js/core";
-import { createUser, findUser, User } from "./db.js";
+import { createUser, findUser } from "./db.js";
 const hmy = new Harmony("https://api.s0.b.hmny.io/", {
   chainType: ChainType.Harmony,
   chainId: ChainID.HmyTestnet,
@@ -34,7 +34,52 @@ inbox.on("item", function (item) {
       console.log("has new comment");
       console.log("receive comment mention from ", item.author);
       let c = client.getComment(item.parent_id);
-      // if (c.body.)
+      console.log('comment body ', item.body);
+      let splitCms = item.body.toLowerCase().replace("\n"," ").replace("\\", " ").split(" ");
+      console.log('split cms ', splitCms);
+      if (splitCms.length > 3){
+        if (splitCms[0] === "/u/tnm_tip_bot" && splitCms[1] === "tip"){
+          let amount = Number.parseFloat(splitCms[2]);
+          let currency = splitCms[3];
+          findUser(item.author.name).then((sendUser) => {
+            let sendUserMn = sendUser.mnemonic;
+            console.log('sendUserMn ', sendUserMn);
+            findUser(c.author.name).then((toUser) => {
+              let addressTo = toUser.oneAddress;
+              hmy.wallet.addByMnemonic(sendUserMn);
+              let txn = hmy.transactions.newTx({
+                to: addressTo,
+                value: new Unit(amount).asOne().toWei(),
+                // gas limit, you can use string
+                gasLimit: "21000",
+                // send token from shardID
+                shardID: 0,
+                // send token to toShardID
+                toShardID: 0,
+                // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
+                gasPrice: new Unit("1").asGwei().toWei(),
+              });
+              hmy.wallet.signTransaction(txn).then((signedTxn) => {
+                signedTxn.sendTransaction().then(([tx, hash]) => {
+                  console.log("tx hash: " + hash);
+                  signedTxn.confirm(hash).then((response) => {
+                    console.log('receipt ',response.receipt);
+                    item.reply("You have tipped successfully !!!")
+                  });
+                }).catch(e => {
+                  console.log('send error ', e);
+                });
+              }).catch(e => {
+                console.log('sign err ', e);
+              });
+            }).catch(e => {
+              console.log('db err ',e)
+            })
+          }).catch((e) => {
+            console.log('find user error ', e);
+          })
+        }
+      }
       c.author.then((a) => {
         console.log("author ", a.name);
       });
@@ -61,7 +106,8 @@ inbox.on("item", function (item) {
                 item.author.name,
                 account.address,
                 account.bech32Address,
-                0
+                0, 
+                mn
               )
                 .then((u) => {
                   if (u) {
@@ -82,10 +128,12 @@ inbox.on("item", function (item) {
             console.log("find user error ", e);
           });
       }
+      item.markAsRead().then((rs) => {
+  
+      }).catch(e => {
+        console.log('mark as read ', e)
+      })
     }
-    item.markAsRead().then((rs) => {
-      console.log(rs);
-    });
   }
   // console.log("item ", item);
 });
