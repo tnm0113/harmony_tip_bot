@@ -22,6 +22,7 @@ const User = sequelize.define("User", {
   username: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
   },
   ethAddress: {
     type: DataTypes.STRING,
@@ -37,8 +38,8 @@ const User = sequelize.define("User", {
   },
   mnemonic: {
     type: DataTypes.STRING,
-    allowNull: false
-  }
+    allowNull: false,
+  },
 });
 
 User.sync({});
@@ -50,7 +51,7 @@ const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
     ethAddress: ethAddress,
     oneAddress: oneAddress,
     balance: balance,
-    mnemonic: mnemonic
+    mnemonic: mnemonic,
   })
     .then((u) => {
       return u;
@@ -70,6 +71,23 @@ const findUser = function (username) {
       console.log("findUse error ", e);
       throw e;
     });
+};
+
+const findOrCreateUser = function (
+  username,
+  ethAddress,
+  oneAddress,
+  balance,
+  mnemonic
+) {
+  return User.findOrCreate({
+    where: { username: username },
+    username: username,
+    ethAddress: ethAddress,
+    oneAddress: oneAddress,
+    balance: balance,
+    mnemonic: mnemonic,
+  });
 };
 
 export { createUser, findUser };
