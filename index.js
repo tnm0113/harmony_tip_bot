@@ -68,7 +68,7 @@ async function findOrCreate(username) {
       mnemonic
     );
     if (createdUser) {
-      sendMessage(item.author, "Wallet Address", text);
+      await client.composeMessage({ to: to, subject: subject, text: text });
     }
   }
 }
@@ -206,12 +206,12 @@ inbox.on("item", function (item) {
         //   });
       }
     }
-    item
-      .markAsRead()
-      .then((rs) => {})
-      .catch((e) => {
-        console.log("mark as read ", e);
-      });
+    // item
+    //   .markAsRead()
+    //   .then((rs) => {})
+    //   .catch((e) => {
+    //     console.log("mark as read ", e);
+    //   });
   }
   // console.log("item ", item);
 });

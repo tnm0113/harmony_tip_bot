@@ -44,6 +44,28 @@ const User = sequelize.define("User", {
 
 User.sync({});
 
+const TipLog = sequelize.define("TipLog", {
+  id: {
+    type: DataTypes.UUIDV4,
+    defaultValue: Sequelize.UUIDV4,
+    primaryKey: true,
+  },
+  fromUser: {
+    type: DataTypes.STRING,
+  },
+  toUser: {
+    type: DataTypes.STRING,
+  },
+  amount: {
+    type: DataTypes.DOUBLE,
+  },
+  reddit_source: {
+    type: DataTypes.STRING,
+  },
+});
+
+TipLog.sync({});
+
 const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
   console.log("create user");
   return User.create({
