@@ -62,6 +62,12 @@ const TipLog = sequelize.define("TipLog", {
   reddit_source: {
     type: DataTypes.STRING,
   },
+  currency: {
+    type: DataTypes.STRING,
+  },
+  action: {
+    type: DataTypes.STRING,
+  },
 });
 
 TipLog.sync({});
@@ -112,4 +118,38 @@ const findOrCreateUser = function (
   });
 };
 
-export { createUser, findUser };
+const saveLog = function (
+  fromUser,
+  toUser,
+  amount,
+  reddit_source,
+  currency,
+  action
+) {
+  return TipLog.create({
+    fromUser: fromUser,
+    toUser: toUser,
+    amount: amount,
+    reddit_source: reddit_source,
+    currency: currency,
+    action: action,
+  })
+    .then((rs) => {
+      return rs;
+    })
+    .create((err) => {
+      throw err;
+    });
+};
+
+const checkExistedInLog = function (reddit_source) {
+  return TipLog.findOne({ where: { reddit_source: reddit_source } })
+    .then((rs) => {
+      return rs;
+    })
+    .catch((e) => {
+      throw e;
+    });
+};
+
+export { createUser, findUser, saveLog };
