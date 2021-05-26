@@ -194,6 +194,14 @@ inbox.on("item", function (item) {
             findUserByUsername(item.author.name).then((user) => {
               const fromUserMn = user.mnemonic;
               transfer(fromUserMn, addressTo, amount);
+              saveLog(
+                item.author.name,
+                addressTo,
+                amount,
+                item.id,
+                currency,
+                "send"
+              );
             });
           }
         }
