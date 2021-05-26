@@ -67,10 +67,36 @@ async function findOrCreate(username) {
       0,
       mnemonic
     );
+    const subject = "Your address:";
+    const text =
+      "One Address: \n" +
+      account.bech32Address +
+      "\n" +
+      "Eth Address: \n" +
+      account.address +
+      "\n";
     if (createdUser) {
       await client.composeMessage({ to: to, subject: subject, text: text });
     }
   }
+}
+
+async function returnHelp(username) {
+  const helpText = "'balance' or 'address' - Retrieve your account balance.";
+  ("'create' - Create a new account if one does not exist");
+  ("'help' - Get this help message");
+  ("'history <optional: number of records>' - Retrieves tipbot commands. Default 10, maximum is 50.");
+  ("'send <amount or all, optional: Currency> <user/address>' - Send Banano to a reddit user or an address");
+  ("'silence <yes/no>' - (default 'no') Prevents the bot from sending you tip notifications or tagging in posts");
+  ("'subreddit <subreddit> <'activate'/'deactivate'> <option>' - Subreddit Moderator Controls - Enabled Tipping on Your Sub (`silent`, `minimal`, `full`)");
+  ("'withdraw <amount or all> <user/address>' - Same as send");
+  ("'opt-out' - Disables your account.");
+  ("'opt-in' - Re-enables your account.");
+  await client.composeMessage({
+    to: username,
+    subject: "Tip Bot Help",
+    text: helpText,
+  });
 }
 
 inbox.on("item", function (item) {
@@ -105,11 +131,43 @@ inbox.on("item", function (item) {
           }
         }
       } else {
+        const regexSend = /send\s(.*)/g;
         console.log("has new message");
         console.log("receive private message from ", item.author.name);
-        if (item.body === "create") {
+        if (item.body.toLowerCase() === "create") {
           findOrCreate(item.author.name);
-        } else if (item.body === "") {
+        } else if (item.body.toLowerCase() === "help") {
+          returnHelp(item.author.name);
+        } else if (item.body.toLowerCase().match(regexSend)) {
+          const splitBody = item.body
+            .toLowerCase()
+            .replace("\n", " ")
+            .replace("\\", " ")
+            .split(" ");
+          if (splitBody.length > 3) {
+            const amount = splitBody[1];
+            const currency = splitBody[2];
+            const toUser = splitBody[3];
+            const fromUser = item.author.name;
+            tip(fromUser, toUser, amount);
+          }
+        } else if (item.body.toLowerCase() === "info") {
+          const user = await findUser(item.author.name);
+          const subject = "Your address and balance:";
+          const text =
+            "One Address: \n" +
+            user.oneAddress +
+            "\n" +
+            "Eth Address: \n" +
+            user.ethAddress +
+            "\n" +
+            "Balance: \n" +
+            user.balance;
+          await client.composeMessage({
+            to: item.author.name,
+            subject: subject,
+            text: text,
+          });
         }
       }
     } else {
