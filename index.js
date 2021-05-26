@@ -34,9 +34,13 @@ async function tip(fromUserName, toUserName, amount) {
 
   const fromUserMn = fromUser.mnemonic;
   const addressTo = toUser.oneAddress;
-  hmy.wallet.addByMnemonic(fromUserMn);
+  transfer(fromUserMn, addressTo, amount);
+}
+
+async function transfer(sendUserMn, toAddress, amount) {
+  hmy.wallet.addByMnemonic(sendUserMn);
   const txn = hmy.transactions.newTx({
-    to: addressTo,
+    to: toAddress,
     value: new Unit(amount).asOne().toWei(),
     // gas limit, you can use string
     gasLimit: "21000",
@@ -132,6 +136,7 @@ inbox.on("item", function (item) {
         }
       } else {
         const regexSend = /send\s(.*)/g;
+        const regexWithdraw = /withdraw\s(.*)/g;
         console.log("has new message");
         console.log("receive private message from ", item.author.name);
         if (item.body.toLowerCase() === "create") {
@@ -168,6 +173,21 @@ inbox.on("item", function (item) {
             subject: subject,
             text: text,
           });
+        } else if (item.body.toLowerCase().match(regexWithdraw)) {
+          const splitBody = item.body
+            .toLowerCase()
+            .replace("\n", " ")
+            .replace("\\", " ")
+            .split(" ");
+          if (splitBody.length > 3) {
+            const amount = splitBody[1];
+            const currency = splitBody[2];
+            const addressTo = splitBody[3];
+            const fromUser = item.author.name;
+            const user = await findUser(fromUser);
+            const fromUserMn = user.mnemonic;
+            transfer(fromUserMn, addressTo, amount);
+          }
         }
       }
     } else {
