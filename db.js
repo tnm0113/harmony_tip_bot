@@ -152,4 +152,4 @@ const checkExistedInLog = function (reddit_source) {
     });
 };
 
-export { createUser, findUser, saveLog };
+export { createUser, findUser, saveLog, checkExistedInLog };

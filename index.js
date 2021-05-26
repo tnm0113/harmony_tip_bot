@@ -24,6 +24,11 @@ const inbox = new InboxStream(client, {
   pollTime: 2000,
 });
 
+async function findUserByUsername(username) {
+  let user = await findUser(username);
+  return user;
+}
+
 async function sendMessage(to, subject, text) {
   await client.composeMessage({ to: to, subject: subject, text: text });
 }
@@ -86,16 +91,15 @@ async function findOrCreate(username) {
 }
 
 async function returnHelp(username) {
-  const helpText = "'balance' or 'address' - Retrieve your account balance.";
-  ("'create' - Create a new account if one does not exist");
-  ("'help' - Get this help message");
-  ("'history <optional: number of records>' - Retrieves tipbot commands. Default 10, maximum is 50.");
-  ("'send <amount or all, optional: Currency> <user/address>' - Send Banano to a reddit user or an address");
-  ("'silence <yes/no>' - (default 'no') Prevents the bot from sending you tip notifications or tagging in posts");
-  ("'subreddit <subreddit> <'activate'/'deactivate'> <option>' - Subreddit Moderator Controls - Enabled Tipping on Your Sub (`silent`, `minimal`, `full`)");
-  ("'withdraw <amount or all> <user/address>' - Same as send");
-  ("'opt-out' - Disables your account.");
-  ("'opt-in' - Re-enables your account.");
+  const helpText = `'balance' or 'address' - Retrieve your account balance.\n
+  ("'create' - Create a new account if one does not exist")\n
+  ("'help' - Get this help message")\n
+  ("'history <optional: number of records>' - Retrieves tipbot commands. Default 10, maximum is 50.")\n
+  ("'send <amount or all, optional: Currency> <user/address>' - Send Banano to a reddit user or an address")\n
+  ("'silence <yes/no>' - (default 'no') Prevents the bot from sending you tip notifications or tagging in posts")\n
+  ("'withdraw <amount or all> <user/address>' - Same as send")\n
+  ("'opt-out' - Disables your account.")\n
+  ("'opt-in' - Re-enables your account.")\n`;
   await client.composeMessage({
     to: username,
     subject: "Tip Bot Help",
@@ -157,7 +161,7 @@ inbox.on("item", function (item) {
             tip(fromUser, toUser, amount);
           }
         } else if (item.body.toLowerCase() === "info") {
-          const user = await findUser(item.author.name);
+          const user = findUserByUsername(item.author.name);
           const subject = "Your address and balance:";
           const text =
             "One Address: \n" +
@@ -168,11 +172,7 @@ inbox.on("item", function (item) {
             "\n" +
             "Balance: \n" +
             user.balance;
-          await client.composeMessage({
-            to: item.author.name,
-            subject: subject,
-            text: text,
-          });
+          sendMessage(item.author.name, subject, text);
         } else if (item.body.toLowerCase().match(regexWithdraw)) {
           const splitBody = item.body
             .toLowerCase()
@@ -184,11 +184,19 @@ inbox.on("item", function (item) {
             const currency = splitBody[2];
             const addressTo = splitBody[3];
             const fromUser = item.author.name;
-            const user = await findUser(fromUser);
+            const user = findUserByUsername(fromUser);
             const fromUserMn = user.mnemonic;
             transfer(fromUserMn, addressTo, amount);
           }
         }
+        item
+          .markAsRead()
+          .then((rs) => {
+            console.log("mark as read rs ", rs);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       }
     } else {
       console.log("tip action already processed");
