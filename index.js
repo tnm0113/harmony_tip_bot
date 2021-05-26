@@ -64,43 +64,45 @@ async function transfer(sendUserMn, toAddress, amount) {
 }
 
 async function findOrCreate(username) {
-  const user = await findUser(username);
-  if (user) {
-    console.log("user already existed");
-  } else {
-    const mnemonic = Wallet.generateMnemonic();
-    const account = hmy.wallet.createAccount(mnemonic);
-    const createdUser = await createUser(
-      username,
-      account.address,
-      account.bech32Address,
-      0,
-      mnemonic
-    );
-    const subject = "Your address:";
-    const text =
-      "One Address: \n" +
-      account.bech32Address +
-      "\n" +
-      "Eth Address: \n" +
-      account.address +
-      "\n";
-    if (createdUser) {
-      await client.composeMessage({ to: to, subject: subject, text: text });
+  findUser(username).then((user) => {
+    if (user) {
+      console.log("user already existed");
+    } else {
+      const mnemonic = Wallet.generateMnemonic();
+      const account = hmy.wallet.createAccount(mnemonic);
+      createUser(
+        username,
+        account.address,
+        account.bech32Address,
+        0,
+        mnemonic
+      ).then((createdUser) => {
+        if (createdUser) {
+          const subject = "Your address:";
+          const text =
+            "One Address: \n" +
+            account.bech32Address +
+            "\n" +
+            "Eth Address: \n" +
+            account.address +
+            "\n";
+          client.composeMessage({ to: to, subject: subject, text: text });
+        }
+      });
     }
-  }
+  });
 }
 
 async function returnHelp(username) {
-  const helpText = `'balance' or 'address' - Retrieve your account balance.\n
-  ("'create' - Create a new account if one does not exist")\n
-  ("'help' - Get this help message")\n
-  ("'history <optional: number of records>' - Retrieves tipbot commands. Default 10, maximum is 50.")\n
-  ("'send <amount or all, optional: Currency> <user/address>' - Send Banano to a reddit user or an address")\n
-  ("'silence <yes/no>' - (default 'no') Prevents the bot from sending you tip notifications or tagging in posts")\n
-  ("'withdraw <amount or all> <user/address>' - Same as send")\n
-  ("'opt-out' - Disables your account.")\n
-  ("'opt-in' - Re-enables your account.")\n`;
+  const helpText = `- 'balance' or 'address' - Retrieve your account balance.\n
+  - 'create' - Create a new account if one does not exist\n
+  - 'help' - Get this help message"\n
+  - 'history <optional: number of records>' - Retrieves tipbot commands. Default 10, maximum is 50.\n
+  - 'send <amount or all, optional: Currency> <user/address>' - Send Banano to a reddit user or an address\n
+  - 'silence <yes/no>' - (default 'no') Prevents the bot from sending you tip notifications or tagging in posts\n
+  - 'withdraw <amount or all> <user/address>' - Same as send\n
+  - 'opt-out' - Disables your account.\n
+  - 'opt-in' - Re-enables your account.\n`;
   await client.composeMessage({
     to: username,
     subject: "Tip Bot Help",
@@ -137,6 +139,8 @@ inbox.on("item", function (item) {
               currency,
               "tip"
             );
+          } else {
+            console.log("other case");
           }
         }
       } else {
