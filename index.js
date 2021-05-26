@@ -26,6 +26,7 @@ const inbox = new InboxStream(client, {
 
 async function findUserByUsername(username) {
   let user = await findUser(username);
+  console.log("find user ", user);
   return user;
 }
 
@@ -161,18 +162,20 @@ inbox.on("item", function (item) {
             tip(fromUser, toUser, amount);
           }
         } else if (item.body.toLowerCase() === "info") {
-          const user = findUserByUsername(item.author.name);
-          const subject = "Your address and balance:";
-          const text =
-            "One Address: \n" +
-            user.oneAddress +
-            "\n" +
-            "Eth Address: \n" +
-            user.ethAddress +
-            "\n" +
-            "Balance: \n" +
-            user.balance;
-          sendMessage(item.author.name, subject, text);
+          findUserByUsername(item.author.name).then((user) => {
+            console.log("found user ", user);
+            const subject = "Your address and balance:";
+            const text =
+              "One Address: " +
+              user.oneAddress +
+              "\n" +
+              "Eth Address: " +
+              user.ethAddress +
+              "\n" +
+              "Balance: \n" +
+              user.balance;
+            sendMessage(item.author.name, subject, text);
+          });
         } else if (item.body.toLowerCase().match(regexWithdraw)) {
           const splitBody = item.body
             .toLowerCase()
@@ -184,9 +187,10 @@ inbox.on("item", function (item) {
             const currency = splitBody[2];
             const addressTo = splitBody[3];
             const fromUser = item.author.name;
-            const user = findUserByUsername(fromUser);
-            const fromUserMn = user.mnemonic;
-            transfer(fromUserMn, addressTo, amount);
+            findUserByUsername(item.author.name).then((user) => {
+              const fromUserMn = user.mnemonic;
+              transfer(fromUserMn, addressTo, amount);
+            });
           }
         }
         item

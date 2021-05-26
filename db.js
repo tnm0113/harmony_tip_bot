@@ -93,7 +93,8 @@ const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
 const findUser = function (username) {
   return User.findOne({ where: { username: username } })
     .then((rs) => {
-      return rs;
+      console.log("find user rs ", rs);
+      return rs.dataValues;
     })
     .catch((e) => {
       console.log("findUse error ", e);
@@ -145,6 +146,7 @@ const saveLog = function (
 const checkExistedInLog = function (reddit_source) {
   return TipLog.findOne({ where: { reddit_source: reddit_source } })
     .then((rs) => {
+      if (rs) return rs.dataValues;
       return rs;
     })
     .catch((e) => {
