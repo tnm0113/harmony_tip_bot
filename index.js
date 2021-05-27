@@ -37,13 +37,15 @@ async function sendMessage(to, subject, text) {
 async function tip(fromUserName, toUserName, amount) {
   const fromUser = await findUser(fromUserName);
   const toUser = await findUser(toUserName);
-
-  const fromUserMn = fromUser.mnemonic;
-  const addressTo = toUser.oneAddress;
-  transfer(fromUserMn, addressTo, amount);
+  if (fromUser && toUser) {
+    const fromUserMn = fromUser.mnemonic;
+    const addressTo = toUser.oneAddress;
+    const fromUserAddress = fromUser.ethAddress;
+    transfer(fromUserMn, addressTo, amount, fromUserAddress);
+  }
 }
 
-async function transfer(sendUserMn, toAddress, amount) {
+async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
   hmy.wallet.addByMnemonic(sendUserMn);
   const txn = hmy.transactions.newTx({
     to: toAddress,
@@ -60,7 +62,7 @@ async function transfer(sendUserMn, toAddress, amount) {
   const signedTxn = await hmy.wallet.signTransaction(txn);
   const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
   console.log(txnHash.result);
-  hmy.wallet.removeAccount(fromUser.ethAddress);
+  hmy.wallet.removeAccount(fromUserAddress);
 }
 
 async function findOrCreate(username) {
@@ -167,18 +169,20 @@ inbox.on("item", function (item) {
           }
         } else if (item.body.toLowerCase() === "info") {
           findUserByUsername(item.author.name).then((user) => {
-            console.log("found user ", user);
-            const subject = "Your address and balance:";
-            const text =
-              "One Address: " +
-              user.oneAddress +
-              "\n" +
-              "Eth Address: " +
-              user.ethAddress +
-              "\n" +
-              "Balance: \n" +
-              user.balance;
-            sendMessage(item.author.name, subject, text);
+            if (user) {
+              console.log("found user ", user);
+              const subject = "Your address and balance:";
+              const text =
+                "One Address: " +
+                user.oneAddress +
+                "\n" +
+                "Eth Address: " +
+                user.ethAddress +
+                "\n" +
+                "Balance: \n" +
+                user.balance;
+              sendMessage(item.author.name, subject, text);
+            }
           });
         } else if (item.body.toLowerCase().match(regexWithdraw)) {
           const splitBody = item.body
@@ -192,16 +196,18 @@ inbox.on("item", function (item) {
             const addressTo = splitBody[3];
             const fromUser = item.author.name;
             findUserByUsername(item.author.name).then((user) => {
-              const fromUserMn = user.mnemonic;
-              transfer(fromUserMn, addressTo, amount);
-              saveLog(
-                item.author.name,
-                addressTo,
-                amount,
-                item.id,
-                currency,
-                "send"
-              );
+              if (user) {
+                const fromUserMn = user.mnemonic;
+                transfer(fromUserMn, addressTo, amount, user.ethAddress);
+                saveLog(
+                  item.author.name,
+                  addressTo,
+                  amount,
+                  item.id,
+                  currency,
+                  "send"
+                );
+              }
             });
           }
         }

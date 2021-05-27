@@ -94,7 +94,8 @@ const findUser = function (username) {
   return User.findOne({ where: { username: username } })
     .then((rs) => {
       console.log("find user rs ", rs);
-      return rs.dataValues;
+      if (rs) return rs.dataValues;
+      return rs;
     })
     .catch((e) => {
       console.log("findUse error ", e);
