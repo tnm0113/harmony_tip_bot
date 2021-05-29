@@ -93,7 +93,7 @@ const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
 const findUser = function (username) {
   return User.findOne({ where: { username: username } })
     .then((rs) => {
-      console.log("find user rs ", rs);
+      // console.log("find user rs ", rs);
       if (rs) return rs.dataValues;
       return rs;
     })
@@ -128,6 +128,7 @@ const saveLog = function (
   currency,
   action
 ) {
+  console.log("save log");
   return TipLog.create({
     fromUser: fromUser,
     toUser: toUser,
@@ -139,7 +140,7 @@ const saveLog = function (
     .then((rs) => {
       return rs;
     })
-    .create((err) => {
+    .catch((err) => {
       throw err;
     });
 };

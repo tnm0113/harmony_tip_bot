@@ -35,17 +35,28 @@ async function sendMessage(to, subject, text) {
 }
 
 async function tip(fromUserName, toUserName, amount) {
-  const fromUser = await findUser(fromUserName);
-  const toUser = await findOrCreate(toUserName);
-  if (fromUser && toUser) {
+  try {
+    const fromUser = await findUser(fromUserName);
+    const toUser = await findOrCreate(toUserName);
+    // if (fromUser && toUser) {
     const fromUserMn = fromUser.mnemonic;
     const addressTo = toUser.oneAddress;
     const fromUserAddress = fromUser.ethAddress;
-    transfer(fromUserMn, addressTo, amount, fromUserAddress);
+    const hash = await transfer(fromUserMn, addressTo, amount, fromUserAddress);
+    // } else {
+    //   console.log("error find user");
+    // }
+    console.log("txnhash ", hash);
+    return hash;
+    // return txnHash.result;
+  } catch (error) {
+    console.log('catch error ', error)
+    return null;
   }
 }
 
 async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
+  console.log("start transfer");
   hmy.wallet.addByMnemonic(sendUserMn);
   const txn = hmy.transactions.newTx({
     to: toAddress,
@@ -61,40 +72,29 @@ async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
   });
   const signedTxn = await hmy.wallet.signTransaction(txn);
   const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
-  console.log(txnHash.result);
+  console.log('txn hash ', txnHash);
+  if (txnHash.error){
+    return null;
+  }
   hmy.wallet.removeAccount(fromUserAddress);
+  return txnHash.result;
 }
 
 async function findOrCreate(username) {
-  findUser(username).then((user) => {
-    if (user) {
-      console.log("user already existed");
-      return user;
-    } else {
-      const mnemonic = Wallet.generateMnemonic();
-      const account = hmy.wallet.createAccount(mnemonic);
-      createUser(
-        username,
-        account.address,
-        account.bech32Address,
-        0,
-        mnemonic
-      ).then((createdUser) => {
-        if (createdUser) {
-          const subject = "Your address:";
-          const text =
-            "One Address: \n" +
-            account.bech32Address +
-            "\n" +
-            "Eth Address: \n" +
-            account.address +
-            "\n";
-          client.composeMessage({ to: to, subject: subject, text: text });
-          return createdUser;
-        }
-      });
-    }
-  });
+  const u = await findUser(username);
+  if (u){
+    return u;
+  } else {
+    const mnemonic = Wallet.generateMnemonic();
+    const account = hmy.wallet.createAccount(mnemonic);
+    return createUser(
+      username,
+      account.address,
+      account.bech32Address,
+      0,
+      mnemonic
+    );
+  }
 }
 
 async function returnHelp(username) {
@@ -114,119 +114,118 @@ async function returnHelp(username) {
   });
 }
 
-inbox.on("item", function (item) {
-  if (item.new) {
-    if (checkExistedInLog(item.id)) {
-      if (item.was_comment) {
-        console.log("has new comment");
-        console.log("receive comment mention from ", item.author);
-        let c = client.getComment(item.parent_id);
-        console.log("comment body ", item.body);
-        let splitCms = item.body
-          .toLowerCase()
-          .replace("\n", " ")
-          .replace("\\", " ")
-          .split(" ");
-        console.log("split cms ", splitCms);
-        if (splitCms.length > 3) {
-          if (splitCms[0] === "/u/tnm_tip_bot" && splitCms[1] === "tip") {
-            let amount = Number.parseFloat(splitCms[2]);
-            let currency = splitCms[3];
-            c.author.then((author) => {
-              tip(item.author.name, author.name, amount);
-            });
-            saveLog(
-              item.author.name,
-              author.name,
-              amount,
-              item.id,
-              currency,
-              "tip"
-            );
-          } else {
-            console.log("other case");
-          }
-        }
-      } else {
-        const regexSend = /send\s(.*)/g;
-        const regexWithdraw = /withdraw\s(.*)/g;
-        console.log("has new message");
-        console.log("receive private message from ", item.author.name);
-        if (item.body.toLowerCase() === "create") {
-          findOrCreate(item.author.name);
-        } else if (item.body.toLowerCase() === "help") {
-          returnHelp(item.author.name);
-        } else if (item.body.toLowerCase().match(regexSend)) {
-          const splitBody = item.body
+inbox.on("item", async function (item) {
+  try {
+    if (item.new) {
+      const log = await checkExistedInLog(item.id);
+      if (!log) {
+        if (item.was_comment) {
+          console.log("has new comment");
+          console.log("receive comment mention from ", item.author);
+          let c = client.getComment(item.parent_id);
+          console.log("comment body ", item.body);
+          let splitCms = item.body
             .toLowerCase()
             .replace("\n", " ")
             .replace("\\", " ")
             .split(" ");
-          if (splitBody.length > 3) {
-            const amount = splitBody[1];
-            const currency = splitBody[2];
-            const toUser = splitBody[3];
-            const fromUser = item.author.name;
-            tip(fromUser, toUser, amount);
-          }
-        } else if (item.body.toLowerCase() === "info") {
-          findUserByUsername(item.author.name).then((user) => {
-            if (user) {
-              console.log("found user ", user);
-              const subject = "Your address and balance:";
-              const text =
-                "One Address: " +
-                user.oneAddress +
-                "\n" +
-                "Eth Address: " +
-                user.ethAddress +
-                "\n" +
-                "Balance: \n" +
-                user.balance;
-              sendMessage(item.author.name, subject, text);
+          console.log("split cms ", splitCms);
+          if (splitCms.length > 3) {
+            if (splitCms[0] === "/u/tnm_tip_bot" && splitCms[1] === "tip") {
+              let amount = Number.parseFloat(splitCms[2]);
+              let currency = splitCms[3];
+              const author = await c.author ;
+              const txnHash = await tip(item.author.name, author.name, amount);
+              if (txnHash){
+                const txLink = "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                item.reply("You have tipped successfully, here is your tx link " + txLink);
+              } else {
+                console.log("tip failed");
+              }
+              await saveLog(
+                item.author.name,
+                author.name,
+                amount,
+                item.id,
+                currency,
+                "tip"
+              )
+            } else {
+              console.log("other case");
             }
-          });
-        } else if (item.body.toLowerCase().match(regexWithdraw)) {
-          const splitBody = item.body
-            .toLowerCase()
-            .replace("\n", " ")
-            .replace("\\", " ")
-            .split(" ");
-          if (splitBody.length > 3) {
-            const amount = splitBody[1];
-            const currency = splitBody[2];
-            const addressTo = splitBody[3];
-            const fromUser = item.author.name;
+          }
+        } else {
+          const regexSend = /send\s(.*)/g;
+          const regexWithdraw = /withdraw\s(.*)/g;
+          console.log("has new message");
+          console.log("receive private message from ", item.author.name);
+          if (item.body.toLowerCase() === "create") {
+            findOrCreate(item.author.name);
+          } else if (item.body.toLowerCase() === "help") {
+            returnHelp(item.author.name);
+          } else if (item.body.toLowerCase().match(regexSend)) {
+            const splitBody = item.body
+              .toLowerCase()
+              .replace("\n", " ")
+              .replace("\\", " ")
+              .split(" ");
+            if (splitBody.length > 3) {
+              const amount = splitBody[1];
+              const currency = splitBody[2];
+              const toUser = splitBody[3];
+              const fromUser = item.author.name;
+              tip(fromUser, toUser, amount);
+            }
+          } else if (item.body.toLowerCase() === "info") {
             findUserByUsername(item.author.name).then((user) => {
               if (user) {
-                const fromUserMn = user.mnemonic;
-                transfer(fromUserMn, addressTo, amount, user.ethAddress);
-                saveLog(
-                  item.author.name,
-                  addressTo,
-                  amount,
-                  item.id,
-                  currency,
-                  "send"
-                );
+                console.log("found user ", user);
+                const subject = "Your address and balance:";
+                const text =
+                  "One Address: " +
+                  user.oneAddress +
+                  "\n" +
+                  "Eth Address: " +
+                  user.ethAddress +
+                  "\n" +
+                  "Balance: \n" +
+                  user.balance;
+                sendMessage(item.author.name, subject, text);
               }
             });
+          } else if (item.body.toLowerCase().match(regexWithdraw)) {
+            const splitBody = item.body
+              .toLowerCase()
+              .replace("\n", " ")
+              .replace("\\", " ")
+              .split(" ");
+            if (splitBody.length > 3) {
+              const amount = splitBody[1];
+              const currency = splitBody[2];
+              const addressTo = splitBody[3];
+              const fromUser = item.author.name;
+              const user = await findUserByUsername(item.author.name);
+              const fromUserMn = user.mnemonic;
+              await transfer(fromUserMn, addressTo, amount, user.ethAddress);
+              await saveLog(
+                item.author.name,
+                addressTo,
+                amount,
+                item.id,
+                currency,
+                "send"
+              )
+            }
           }
+          await item.markAsRead();
         }
-        item
-          .markAsRead()
-          .then((rs) => {
-            console.log("mark as read rs ", rs);
-          })
-          .catch((err) => {
-            console.log(err);
-          });
+      } else {
+        console.log("tip action already processed");
       }
-    } else {
-      console.log("tip action already processed");
     }
+  } catch (error) {
+    console.log("process item error ", error);
   }
-  // console.log("item ", item);
 });
 
 // inbox.end();
