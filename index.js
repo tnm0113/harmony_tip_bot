@@ -141,6 +141,7 @@ inbox.on("item", async function (item) {
                 item.reply("You have tipped successfully, here is your tx link " + txLink);
               } else {
                 console.log("tip failed");
+                item.reply("Failed to tip, please check your comment, balance and try again");
               }
               await saveLog(
                 item.author.name,
