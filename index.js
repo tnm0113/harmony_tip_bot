@@ -36,7 +36,7 @@ async function sendMessage(to, subject, text) {
 
 async function tip(fromUserName, toUserName, amount) {
   const fromUser = await findUser(fromUserName);
-  const toUser = await findUser(toUserName);
+  const toUser = await findOrCreate(toUserName);
   if (fromUser && toUser) {
     const fromUserMn = fromUser.mnemonic;
     const addressTo = toUser.oneAddress;
@@ -69,6 +69,7 @@ async function findOrCreate(username) {
   findUser(username).then((user) => {
     if (user) {
       console.log("user already existed");
+      return user;
     } else {
       const mnemonic = Wallet.generateMnemonic();
       const account = hmy.wallet.createAccount(mnemonic);
@@ -89,6 +90,7 @@ async function findOrCreate(username) {
             account.address +
             "\n";
           client.composeMessage({ to: to, subject: subject, text: text });
+          return createdUser;
         }
       });
     }
