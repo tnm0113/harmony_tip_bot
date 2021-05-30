@@ -138,7 +138,7 @@ inbox.on("item", async function (item) {
               const txnHash = await tip(item.author.name, author.name, amount);
               if (txnHash){
                 const txLink = "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                item.reply("You have tipped successfully, here is your tx link " + txLink);
+                item.reply("You have tipped successfully, here is the tx link for that transaction " + txLink);
               } else {
                 console.log("tip failed");
                 item.reply("Failed to tip, please check your comment, balance and try again");
