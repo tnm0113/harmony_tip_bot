@@ -221,6 +221,7 @@ inbox.on("item", async function (item) {
               "\n" +
               "Balance: \n" +
               info.balance;
+            const subject = "Your account info:";
             sendMessage(item.author.name, subject, text);
           } else if (item.body.toLowerCase().match(regexWithdraw)) {
             const splitBody = item.body
