@@ -86,10 +86,11 @@ async function getBalance(username) {
     if (user) {
       const account = hmy.wallet.addByMnemonic(user.mnemonic);
       const balance = await account.getBalance();
+      console.log("balance ", balance);
       return {
         oneAddress: user.oneAddress,
         ethAddress: user.ethAddress,
-        balance: balance,
+        balance: balance.balance,
       };
     }
   } catch (error) {
@@ -211,7 +212,7 @@ inbox.on("item", async function (item) {
               tip(fromUser, toUser, amount);
             }
           } else if (item.body.toLowerCase() === "info") {
-            const info = getBalance(item.author.name);
+            const info = await getBalance(item.author.name);
             const text =
               "One Address: " +
               info.oneAddress +
