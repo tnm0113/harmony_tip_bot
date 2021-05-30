@@ -153,14 +153,17 @@ inbox.on("item", async function (item) {
               )
             } else {
               console.log("other case");
-            }
+              item.reply("Invalid command, send Priavte Message with help in the body to me to get help, tks !");
+            } 
+          } else {
+            item.reply("Invalid command, send Private Message with help in the body to me to get help, tks !");
           }
         } else {
           const regexSend = /send\s(.*)/g;
           const regexWithdraw = /withdraw\s(.*)/g;
           console.log("has new message");
           console.log("receive private message from ", item.author.name);
-          if (item.body.toLowerCase() === "create") {
+          if (item.body.toLowerCase() === "create" || item.body.toLowerCase() === "register") {
             findOrCreate(item.author.name);
           } else if (item.body.toLowerCase() === "help") {
             returnHelp(item.author.name);
