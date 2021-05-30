@@ -35,6 +35,15 @@ async function sendMessage(to, subject, text) {
 }
 
 async function tip(fromUserName, toUserName, amount) {
+  console.log(
+    "tip from " +
+      fromUserName +
+      " to  " +
+      toUserName +
+      " amount " +
+      amount +
+      " ONE"
+  );
   try {
     const fromUser = await findUser(fromUserName);
     const toUser = await findOrCreate(toUserName);
@@ -81,16 +90,19 @@ async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
 }
 
 async function getBalance(username) {
+  console.log("get balance of " + username);
   try {
     const user = await findUserByUsername(username);
     if (user) {
       const account = hmy.wallet.addByMnemonic(user.mnemonic);
       const balance = await account.getBalance();
       console.log("balance ", balance);
+      const b = new Unit(balance.balance).asWei().toOne();
+      console.log("real balance in ONE ", b);
       return {
         oneAddress: user.oneAddress,
         ethAddress: user.ethAddress,
-        balance: balance.balance,
+        balance: b,
       };
     }
   } catch (error) {
@@ -117,12 +129,12 @@ async function findOrCreate(username) {
 
 async function returnHelp(username) {
   const helpText = `- 'balance' or 'address' - Retrieve your account balance.\n
-  - 'create' - Create a new account if one does not exist\n
+  - 'create' or 'register' - Create a new account if one does not exist\n
   - 'help' - Get this help message"\n
   - 'history <optional: number of records>' - Retrieves tipbot commands. Default 10, maximum is 50.\n
-  - 'send <amount or all, optional: Currency> <user/address>' - Send Banano to a reddit user or an address\n
+  - 'send <amount> <currency> <user/address>' - Send Banano to a reddit user or an address\n
   - 'silence <yes/no>' - (default 'no') Prevents the bot from sending you tip notifications or tagging in posts\n
-  - 'withdraw <amount or all> <user/address>' - Same as send\n
+  - 'withdraw <amount> <currency> <user/address>' - Same as send\n
   - 'opt-out' - Disables your account.\n
   - 'opt-in' - Re-enables your account.\n`;
   await client.composeMessage({
@@ -214,14 +226,15 @@ inbox.on("item", async function (item) {
           } else if (item.body.toLowerCase() === "info") {
             const info = await getBalance(item.author.name);
             const text =
-              "One Address: " +
+              `One Address:  ` +
               info.oneAddress +
-              "\n" +
-              "Eth Address: " +
+              `\n 
+              Eth Address: ` +
               info.ethAddress +
-              "\n" +
-              "Balance: \n" +
-              info.balance;
+              `\n +
+              Balance:  ` +
+              info.balance +
+              ` ONE \n`;
             const subject = "Your account info:";
             sendMessage(item.author.name, subject, text);
           } else if (item.body.toLowerCase().match(regexWithdraw)) {
