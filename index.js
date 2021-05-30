@@ -228,7 +228,7 @@ inbox.on("item", async function (item) {
             const text =
               `One Address:  ` +
               info.oneAddress +
-              `\n 
+              `\n +
               Eth Address: ` +
               info.ethAddress +
               `\n +
