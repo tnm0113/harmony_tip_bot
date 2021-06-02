@@ -71,33 +71,39 @@ async function tip(fromUserName, toUserName, amount) {
     // return txnHash.result;
   } catch (error) {
     console.log("catch error ", error);
+    logger.error({ err: error }, "tip user error ");
     return null;
   }
 }
 
 async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
   console.log("start transfer");
-  hmy.wallet.addByMnemonic(sendUserMn);
-  const txn = hmy.transactions.newTx({
-    to: toAddress,
-    value: new Unit(amount).asOne().toWei(),
-    // gas limit, you can use string
-    gasLimit: "21000",
-    // send token from shardID
-    shardID: 0,
-    // send token to toShardID
-    toShardID: 0,
-    // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
-    gasPrice: new Unit("1").asGwei().toWei(),
-  });
-  const signedTxn = await hmy.wallet.signTransaction(txn);
-  const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
-  console.log("txn hash ", txnHash);
-  if (txnHash.error) {
+  try {
+    hmy.wallet.addByMnemonic(sendUserMn);
+    const txn = hmy.transactions.newTx({
+      to: toAddress,
+      value: new Unit(amount).asOne().toWei(),
+      // gas limit, you can use string
+      gasLimit: "21000",
+      // send token from shardID
+      shardID: 0,
+      // send token to toShardID
+      toShardID: 0,
+      // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
+      gasPrice: new Unit("1").asGwei().toWei(),
+    });
+    const signedTxn = await hmy.wallet.signTransaction(txn);
+    const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
+    console.log("txn hash ", txnHash);
+    if (txnHash.error) {
+      return null;
+    }
+    hmy.wallet.removeAccount(fromUserAddress);
+    return txnHash.result;
+  } catch (err) {
+    logger.error({ err: error }, "transfer error ");
     return null;
   }
-  hmy.wallet.removeAccount(fromUserAddress);
-  return txnHash.result;
 }
 
 async function getBalance(username) {
@@ -118,23 +124,29 @@ async function getBalance(username) {
     }
   } catch (error) {
     console.log("get balance error ", error);
+    logger.error({ err: error }, "get balance error ");
   }
 }
 
 async function findOrCreate(username) {
-  const u = await findUser(username);
-  if (u) {
-    return u;
-  } else {
-    const mnemonic = Wallet.generateMnemonic();
-    const account = await hmy.wallet.createAccount(mnemonic);
-    return createUser(
-      username,
-      account.address,
-      account.bech32Address,
-      0,
-      mnemonic
-    );
+  try {
+    const u = await findUser(username);
+    if (u) {
+      return u;
+    } else {
+      const mnemonic = Wallet.generateMnemonic();
+      const account = await hmy.wallet.createAccount(mnemonic);
+      return createUser(
+        username,
+        account.address,
+        account.bech32Address,
+        0,
+        mnemonic
+      );
+    }
+  } catch (error) {
+    logger.error({ err: error }, "findOrCreate user error ");
+    return null;
   }
 }
 
@@ -148,18 +160,24 @@ async function returnHelp(username) {
   - 'withdraw <amount> <currency> <user/address>' - Same as send\n
   - 'opt-out' - Disables your account.\n
   - 'opt-in' - Re-enables your account.\n`;
-  await client.composeMessage({
-    to: username,
-    subject: "Tip Bot Help",
-    text: helpText,
-  });
+  try {
+    await client.composeMessage({
+      to: username,
+      subject: "Tip Bot Help",
+      text: helpText,
+    });
+  } catch (error) {
+    logger.error({ err: error }, "return help error ");
+  }
 }
 
 inbox.on("item", async function (item) {
   try {
     if (item.new) {
       const log = await checkExistedInLog(item.id);
-      if (!log) {
+      if (log) {
+        console.log("tip action already processed");
+      } else {
         if (item.was_comment) {
           console.log("has new comment");
           console.log("receive comment mention from ", item.author);
@@ -285,12 +303,11 @@ inbox.on("item", async function (item) {
           }
           await item.markAsRead();
         }
-      } else {
-        console.log("tip action already processed");
       }
     }
   } catch (error) {
     console.log("process item error ", error);
+    logger.error({ err: error }, "process item error ");
   }
 });
 
