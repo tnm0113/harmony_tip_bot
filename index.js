@@ -101,7 +101,7 @@ async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
     hmy.wallet.removeAccount(fromUserAddress);
     return txnHash.result;
   } catch (err) {
-    logger.error({ err: error }, "transfer error ");
+    logger.error({ err: err }, "transfer error ");
     return null;
   }
 }
