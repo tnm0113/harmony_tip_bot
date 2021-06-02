@@ -274,7 +274,8 @@ inbox.on("item", async function (item) {
                 info.oneAddress +
                 `\n \n ` +
                 `Eth Address: ` +
-                info.ethAddress` + \n \n` +
+                info.ethAddress +
+                `\n \n` +
                 `Balance:  ` +
                 info.balance +
                 ` ONE`;
