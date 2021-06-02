@@ -268,14 +268,16 @@ inbox.on("item", async function (item) {
             }
           } else if (item.body.toLowerCase() === "info") {
             const info = await getBalance(item.author.name);
-            const text =
-              `One Address:  ` +
-              info.oneAddress`\n \n``Eth Address: ` +
-              info.ethAddress`\n \n``Balance:  ` +
-              info.balance +
-              ` ONE`;
-            const subject = "Your account info:";
-            sendMessage(item.author.name, subject, text);
+            if (info) {
+              const text =
+                `One Address:  ` +
+                info.oneAddress`\n \n``Eth Address: ` +
+                info.ethAddress`\n \n``Balance:  ` +
+                info.balance +
+                ` ONE`;
+              const subject = "Your account info:";
+              sendMessage(item.author.name, subject, text);
+            }
           } else if (item.body.toLowerCase().match(regexWithdraw)) {
             const splitBody = item.body
               .toLowerCase()
