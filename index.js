@@ -190,7 +190,11 @@ inbox.on("item", async function (item) {
             .split(" ");
           console.log("split cms ", splitCms);
           if (splitCms.length > 3) {
-            if (splitCms[0] === "/u/tnm_tip_bot" && splitCms[1] === "tip") {
+            if (
+              (splitCms[0] === "/u/tnm_tip_bot" ||
+                splitCms[0] === "u/tnm_tip_bot") &&
+              splitCms[1] === "tip"
+            ) {
               let amount = Number.parseFloat(splitCms[2]);
               let currency = splitCms[3];
               const author = await c.author;
