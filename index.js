@@ -270,14 +270,10 @@ inbox.on("item", async function (item) {
             const info = await getBalance(item.author.name);
             const text =
               `One Address:  ` +
-              info.oneAddress +
-              `\n +
-              Eth Address: ` +
-              info.ethAddress +
-              `\n +
-              Balance:  ` +
+              info.oneAddress`\n \n``Eth Address: ` +
+              info.ethAddress`\n \n``Balance:  ` +
               info.balance +
-              ` ONE \n`;
+              ` ONE`;
             const subject = "Your account info:";
             sendMessage(item.author.name, subject, text);
           } else if (item.body.toLowerCase().match(regexWithdraw)) {
