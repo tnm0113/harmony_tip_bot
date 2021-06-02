@@ -241,7 +241,7 @@ inbox.on("item", async function (item) {
               const text =
                 `One Address:  ` +
                 user.oneAddress +
-                `\n` +
+                `\n \n` +
                 `Eth Address: ` +
                 user.ethAddress;
               const subject = "Your account info:";
