@@ -271,8 +271,10 @@ inbox.on("item", async function (item) {
             if (info) {
               const text =
                 `One Address:  ` +
-                info.oneAddress`\n \n``Eth Address: ` +
-                info.ethAddress`\n \n``Balance:  ` +
+                info.oneAddress`\n \n ` +
+                `Eth Address: ` +
+                info.ethAddress`\n \n` +
+                `Balance:  ` +
                 info.balance +
                 ` ONE`;
               const subject = "Your account info:";
