@@ -271,9 +271,10 @@ inbox.on("item", async function (item) {
             if (info) {
               const text =
                 `One Address:  ` +
-                info.oneAddress`\n \n ` +
+                info.oneAddress +
+                `\n \n ` +
                 `Eth Address: ` +
-                info.ethAddress`\n \n` +
+                info.ethAddress` + \n \n` +
                 `Balance:  ` +
                 info.balance +
                 ` ONE`;
