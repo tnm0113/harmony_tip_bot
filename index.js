@@ -240,10 +240,10 @@ inbox.on("item", async function (item) {
             if (user) {
               const text =
                 `One Address:  ` +
-                info.oneAddress +
+                user.oneAddress +
                 `\n 
                 Eth Address: ` +
-                info.ethAddress +
+                user.ethAddress +
                 `\n `;
               const subject = "Your account info:";
               sendMessage(item.author.name, subject, text);
