@@ -7,14 +7,25 @@ import { ChainID, ChainType, Unit } from "@harmony-js/utils";
 import { TransactionFactory } from "@harmony-js/transaction";
 import { Harmony } from "@harmony-js/core";
 import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
+import { pino } from "pino";
+import config from "./credentials.js";
+
 const hmy = new Harmony("https://api.s0.b.hmny.io/", {
   chainType: ChainType.Harmony,
   chainId: ChainID.HmyTestnet,
 });
 
 const wallet = new Wallet(hmy);
-
-import config from "./credentials.js";
+const logger = pino(
+  {
+    prettyPrint: {
+      colorize: false,
+      levelFirst: true,
+      translateTime: "yyyy-dd-mm, h:MM:ss TT",
+    },
+  },
+  pino.destination("./log/app.log")
+);
 
 const client = new Snoowrap(config);
 
@@ -26,7 +37,7 @@ const inbox = new InboxStream(client, {
 
 async function findUserByUsername(username) {
   let user = await findUser(username);
-  console.log("find user ", user);
+  logger.info("find user result ", JSON.stringify(user));
   return user;
 }
 
@@ -116,7 +127,7 @@ async function findOrCreate(username) {
     return u;
   } else {
     const mnemonic = Wallet.generateMnemonic();
-    const account = hmy.wallet.createAccount(mnemonic);
+    const account = await hmy.wallet.createAccount(mnemonic);
     return createUser(
       username,
       account.address,

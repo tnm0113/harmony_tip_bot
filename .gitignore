@@ -1,3 +1,5 @@
 node_modules/
 credentials.js
 database.sqlite
+build/
+log/
