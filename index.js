@@ -218,7 +218,18 @@ inbox.on("item", async function (item) {
             item.body.toLowerCase() === "create" ||
             item.body.toLowerCase() === "register"
           ) {
-            findOrCreate(item.author.name);
+            const user = await findOrCreate(item.author.name);
+            if (user) {
+              const text =
+                `One Address:  ` +
+                info.oneAddress +
+                `\n 
+                Eth Address: ` +
+                info.ethAddress +
+                `\n `;
+              const subject = "Your account info:";
+              sendMessage(item.author.name, subject, text);
+            }
           } else if (item.body.toLowerCase() === "help") {
             returnHelp(item.author.name);
           } else if (item.body.toLowerCase().match(regexSend)) {
