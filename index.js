@@ -1,31 +1,12 @@
-import { InboxStream, CommentStream, SubmissionStream } from "snoostorm";
+import { InboxStream } from "snoostorm";
 import Snoowrap from "snoowrap";
-
-import { Account, Wallet } from "@harmony-js/account";
-import { Messenger, HttpProvider } from "@harmony-js/network";
-import { ChainID, ChainType, Unit } from "@harmony-js/utils";
-import { TransactionFactory } from "@harmony-js/transaction";
-import { Harmony } from "@harmony-js/core";
 import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
-import { pino } from "pino";
+import { logger } from "./logger.js";
 import config from "./credentials.js";
+import { transfer, getAccountBalance, createAccount } from "./harmony.js";
 
-const hmy = new Harmony("https://api.s0.b.hmny.io/", {
-  chainType: ChainType.Harmony,
-  chainId: ChainID.HmyTestnet,
-});
-
-const wallet = new Wallet(hmy);
-const logger = pino(
-  {
-    prettyPrint: {
-      colorize: false,
-      levelFirst: true,
-      translateTime: "yyyy-dd-mm, h:MM:ss TT",
-    },
-  },
-  pino.destination("./log/app.log")
-);
+const regexSend = /send\s(.*)/g;
+const regexWithdraw = /withdraw\s(.*)/g;
 
 const client = new Snoowrap(config);
 
@@ -35,21 +16,15 @@ const inbox = new InboxStream(client, {
   pollTime: 2000,
 });
 
-async function findUserByUsername(username) {
-  let user = await findUser(username);
-  logger.info("find user result ", JSON.stringify(user));
-  return user;
-}
-
 async function sendMessage(to, subject, text) {
   await client.composeMessage({ to: to, subject: subject, text: text });
 }
 
 async function tip(fromUserName, toUserName, amount) {
-  console.log(
-    "tip from " +
+  logger.info(
+    "process tip request from " +
       fromUserName +
-      " to  " +
+      " to " +
       toUserName +
       " amount " +
       amount +
@@ -58,17 +33,12 @@ async function tip(fromUserName, toUserName, amount) {
   try {
     const fromUser = await findUser(fromUserName);
     const toUser = await findOrCreate(toUserName);
-    // if (fromUser && toUser) {
     const fromUserMn = fromUser.mnemonic;
     const addressTo = toUser.oneAddress;
-    const fromUserAddress = fromUser.ethAddress;
+    const fromUserAddress = fromUser.oneAddress;
     const hash = await transfer(fromUserMn, addressTo, amount, fromUserAddress);
-    // } else {
-    //   console.log("error find user");
-    // }
     console.log("txnhash ", hash);
     return hash;
-    // return txnHash.result;
   } catch (error) {
     console.log("catch error ", error);
     logger.error({ err: error }, "tip user error ");
@@ -76,46 +46,11 @@ async function tip(fromUserName, toUserName, amount) {
   }
 }
 
-async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
-  console.log("start transfer");
-  try {
-    hmy.wallet.addByMnemonic(sendUserMn);
-    const txn = hmy.transactions.newTx({
-      to: toAddress,
-      value: new Unit(amount).asOne().toWei(),
-      // gas limit, you can use string
-      gasLimit: "21000",
-      // send token from shardID
-      shardID: 0,
-      // send token to toShardID
-      toShardID: 0,
-      // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
-      gasPrice: new Unit("1").asGwei().toWei(),
-    });
-    const signedTxn = await hmy.wallet.signTransaction(txn);
-    const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
-    console.log("txn hash ", txnHash);
-    if (txnHash.error) {
-      return null;
-    }
-    hmy.wallet.removeAccount(fromUserAddress);
-    return txnHash.result;
-  } catch (err) {
-    logger.error({ err: err }, "transfer error ");
-    return null;
-  }
-}
-
 async function getBalance(username) {
-  console.log("get balance of " + username);
   try {
-    const user = await findUserByUsername(username);
+    const user = await findUser(username);
     if (user) {
-      const account = hmy.wallet.addByMnemonic(user.mnemonic);
-      const balance = await account.getBalance();
-      console.log("balance ", balance);
-      const b = new Unit(balance.balance).asWei().toOne();
-      console.log("real balance in ONE ", b);
+      const b = await getAccountBalance(user.mnemonic);
       return {
         oneAddress: user.oneAddress,
         ethAddress: user.ethAddress,
@@ -134,14 +69,13 @@ async function findOrCreate(username) {
     if (u) {
       return u;
     } else {
-      const mnemonic = Wallet.generateMnemonic();
-      const account = await hmy.wallet.createAccount(mnemonic);
+      const blockchainInfo = await createAccount();
       return createUser(
         username,
-        account.address,
-        account.bech32Address,
+        blockchainInfo.ethAddress,
+        blockchainInfo.oneAddress,
         0,
-        mnemonic
+        blockchainInfo.mnemonic
       );
     }
   } catch (error) {
@@ -151,15 +85,12 @@ async function findOrCreate(username) {
 }
 
 async function returnHelp(username) {
-  const helpText = `- 'balance' or 'address' - Retrieve your account balance.\n
-  - 'create' or 'register' - Create a new account if one does not exist\n
-  - 'help' - Get this help message"\n
-  - 'history <optional: number of records>' - Retrieves tipbot commands. Default 10, maximum is 50.\n
-  - 'send <amount> <currency> <user/address>' - Send Banano to a reddit user or an address\n
-  - 'silence <yes/no>' - (default 'no') Prevents the bot from sending you tip notifications or tagging in posts\n
-  - 'withdraw <amount> <currency> <user/address>' - Same as send\n
-  - 'opt-out' - Disables your account.\n
-  - 'opt-in' - Re-enables your account.\n`;
+  const helpText =
+    `- 'balance' or 'address' - Retrieve your account balance.\n\n` +
+    `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
+    `- 'send <amount> <currency> <user>' - Send ONE to a reddit user.\n\n` +
+    `- 'withdraw <amount> <currency> <address>' - Withdraw ONE to an address.\n\n` +
+    `- 'help' - Get this help message.`;
   try {
     await client.composeMessage({
       to: username,
@@ -171,140 +102,176 @@ async function returnHelp(username) {
   }
 }
 
+async function processComment(item) {
+  logger.info(
+    "receive comment mention from " + item.author + " body " + item.body
+  );
+  let c = client.getComment(item.parent_id);
+  let splitCms = item.body
+    .toLowerCase()
+    .replace("\n", " ")
+    .replace("\\", " ")
+    .split(" ");
+  console.log("split cms ", splitCms);
+  if (splitCms.length > 3) {
+    if (
+      (splitCms[0] === "/u/tnm_tip_bot" || splitCms[0] === "u/tnm_tip_bot") &&
+      splitCms[1] === "tip"
+    ) {
+      let amount = Number.parseFloat(splitCms[2]);
+      let currency = splitCms[3];
+      const author = await c.author;
+      const txnHash = await tip(item.author.name, author.name, amount);
+      if (txnHash) {
+        const txLink = "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+        item.reply(
+          "You have tipped successfully, here is the tx link for that transaction " +
+            txLink
+        );
+      } else {
+        console.log("tip failed");
+        item.reply(
+          "Failed to tip, please check your comment, balance and try again"
+        );
+      }
+      await saveLog(
+        item.author.name,
+        author.name,
+        amount,
+        item.id,
+        currency,
+        "tip"
+      );
+    } else {
+      console.log("other case");
+      item.reply(
+        "Invalid command, send Priavte Message with help in the body to me to get help, tks !"
+      );
+    }
+  } else {
+    item.reply(
+      "Invalid command, send Private Message with help in the body to me to get help, tks !"
+    );
+  }
+}
+
+async function processSendRequest(item) {
+  const splitBody = item.body
+    .toLowerCase()
+    .replace("\n", " ")
+    .replace("\\", " ")
+    .split(" ");
+  if (splitBody.length > 3) {
+    const amount = splitBody[1];
+    const currency = splitBody[2];
+    const toUser = splitBody[3];
+    const fromUser = item.author.name;
+    const txnHash = await tip(fromUser, toUser, amount);
+    if (txnHash) {
+      const txLink = "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+      await client.composeMessage({
+        to: fromUser,
+        subject: "Send result",
+        text:
+          "You have tipped successfully, here is the tx link for that transaction " +
+          txLink,
+      });
+    } else {
+      await client.composeMessage({
+        to: fromUser,
+        subject: "Send result:",
+        text: "Failed to tip, please check your comment, balance and try again",
+      });
+    }
+  }
+}
+
+async function processInfoRequest(item) {
+  const info = await getBalance(item.author.name);
+  if (info) {
+    const text =
+      `One Address:  ` +
+      info.oneAddress +
+      `\n \n ` +
+      `Eth Address: ` +
+      info.ethAddress +
+      `\n \n` +
+      `Balance:  ` +
+      info.balance +
+      ` ONE`;
+    const subject = "Your account info:";
+    sendMessage(item.author.name, subject, text);
+  }
+}
+
+async function processWithdrawRequest(item) {
+  const splitBody = item.body
+    .toLowerCase()
+    .replace("\n", " ")
+    .replace("\\", " ")
+    .split(" ");
+  if (splitBody.length > 3) {
+    const amount = splitBody[1];
+    const currency = splitBody[2];
+    const addressTo = splitBody[3];
+    const fromUser = item.author.name;
+    const user = await findUserByUsername(item.author.name);
+    const fromUserMn = user.mnemonic;
+    await transfer(fromUserMn, addressTo, amount, user.ethAddress);
+    await saveLog(
+      item.author.name,
+      addressTo,
+      amount,
+      item.id,
+      currency,
+      "send"
+    );
+  }
+}
+
+async function processCreateRequest(item) {
+  const user = await findOrCreate(item.author.name);
+  if (user) {
+    const text =
+      `One Address:  ` +
+      user.oneAddress +
+      `\n \n` +
+      `Eth Address: ` +
+      user.ethAddress;
+    const subject = "Your account info:";
+    sendMessage(item.author.name, subject, text);
+  }
+}
+
 inbox.on("item", async function (item) {
   try {
     if (item.new) {
       const log = await checkExistedInLog(item.id);
       if (log) {
-        console.log("tip action already processed");
+        logger.info("tip action already processed");
       } else {
         if (item.was_comment) {
-          console.log("has new comment");
-          console.log("receive comment mention from ", item.author);
-          let c = client.getComment(item.parent_id);
-          console.log("comment body ", item.body);
-          let splitCms = item.body
-            .toLowerCase()
-            .replace("\n", " ")
-            .replace("\\", " ")
-            .split(" ");
-          console.log("split cms ", splitCms);
-          if (splitCms.length > 3) {
-            if (
-              (splitCms[0] === "/u/tnm_tip_bot" ||
-                splitCms[0] === "u/tnm_tip_bot") &&
-              splitCms[1] === "tip"
-            ) {
-              let amount = Number.parseFloat(splitCms[2]);
-              let currency = splitCms[3];
-              const author = await c.author;
-              const txnHash = await tip(item.author.name, author.name, amount);
-              if (txnHash) {
-                const txLink =
-                  "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                item.reply(
-                  "You have tipped successfully, here is the tx link for that transaction " +
-                    txLink
-                );
-              } else {
-                console.log("tip failed");
-                item.reply(
-                  "Failed to tip, please check your comment, balance and try again"
-                );
-              }
-              await saveLog(
-                item.author.name,
-                author.name,
-                amount,
-                item.id,
-                currency,
-                "tip"
-              );
-            } else {
-              console.log("other case");
-              item.reply(
-                "Invalid command, send Priavte Message with help in the body to me to get help, tks !"
-              );
-            }
-          } else {
-            item.reply(
-              "Invalid command, send Private Message with help in the body to me to get help, tks !"
-            );
-          }
+          processComment(item);
         } else {
-          const regexSend = /send\s(.*)/g;
-          const regexWithdraw = /withdraw\s(.*)/g;
-          console.log("has new message");
-          console.log("receive private message from ", item.author.name);
+          logger.info(
+            "process private message from " +
+              item.author.name +
+              " body " +
+              item.body
+          );
           if (
             item.body.toLowerCase() === "create" ||
             item.body.toLowerCase() === "register"
           ) {
-            const user = await findOrCreate(item.author.name);
-            if (user) {
-              const text =
-                `One Address:  ` +
-                user.oneAddress +
-                `\n \n` +
-                `Eth Address: ` +
-                user.ethAddress;
-              const subject = "Your account info:";
-              sendMessage(item.author.name, subject, text);
-            }
+            processCreateRequest(item);
           } else if (item.body.toLowerCase() === "help") {
             returnHelp(item.author.name);
           } else if (item.body.toLowerCase().match(regexSend)) {
-            const splitBody = item.body
-              .toLowerCase()
-              .replace("\n", " ")
-              .replace("\\", " ")
-              .split(" ");
-            if (splitBody.length > 3) {
-              const amount = splitBody[1];
-              const currency = splitBody[2];
-              const toUser = splitBody[3];
-              const fromUser = item.author.name;
-              tip(fromUser, toUser, amount);
-            }
+            processSendRequest(item);
           } else if (item.body.toLowerCase() === "info") {
-            const info = await getBalance(item.author.name);
-            if (info) {
-              const text =
-                `One Address:  ` +
-                info.oneAddress +
-                `\n \n ` +
-                `Eth Address: ` +
-                info.ethAddress +
-                `\n \n` +
-                `Balance:  ` +
-                info.balance +
-                ` ONE`;
-              const subject = "Your account info:";
-              sendMessage(item.author.name, subject, text);
-            }
+            processInfoRequest(item);
           } else if (item.body.toLowerCase().match(regexWithdraw)) {
-            const splitBody = item.body
-              .toLowerCase()
-              .replace("\n", " ")
-              .replace("\\", " ")
-              .split(" ");
-            if (splitBody.length > 3) {
-              const amount = splitBody[1];
-              const currency = splitBody[2];
-              const addressTo = splitBody[3];
-              const fromUser = item.author.name;
-              const user = await findUserByUsername(item.author.name);
-              const fromUserMn = user.mnemonic;
-              await transfer(fromUserMn, addressTo, amount, user.ethAddress);
-              await saveLog(
-                item.author.name,
-                addressTo,
-                amount,
-                item.id,
-                currency,
-                "send"
-              );
-            }
+            processWithdrawRequest(item);
           }
           await item.markAsRead();
         }
@@ -316,5 +283,4 @@ inbox.on("item", async function (item) {
   }
 });
 
-// inbox.end();
-inbox.on("end", () => console.log("And now my watch has ended"));
+inbox.on("end", () => logger.info("Inbox subcribe ended!!!"));
