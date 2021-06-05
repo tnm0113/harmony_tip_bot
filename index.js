@@ -16,6 +16,13 @@ const regexWithdraw = /withdraw\s(.*)/g;
 const botConfig = config.get("bot");
 const client = new Snoowrap(botConfig);
 
+client.config({
+    requestDelay: 1000,
+    continueAfterRatelimitError: true,
+    maxRetryAttempts: 5,
+    logger: logger,
+});
+
 const inbox = new InboxStream(client, {
     filter: "mentions" | "messages",
     limit: 0,
