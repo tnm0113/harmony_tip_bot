@@ -61,6 +61,8 @@ async function getBalance(username) {
                 ethAddress: user.ethAddress,
                 balance: b,
             };
+        } else {
+            return null;
         }
     } catch (error) {
         logger.error("get balance error " + error);
@@ -210,6 +212,10 @@ async function processInfoRequest(item) {
             info.balance +
             ` ONE`;
         const subject = "Your account info:";
+        sendMessage(item.author.name, subject, text);
+    } else {
+        const text = `Your account doesnt exist, please send "create" or "register" to create account`;
+        const subject = "Help message";
         sendMessage(item.author.name, subject, text);
     }
 }
