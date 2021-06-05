@@ -8,13 +8,12 @@ const hmy = new Harmony("https://api.s0.b.hmny.io/", {
   chainId: ChainID.HmyTestnet,
 });
 
-async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
+async function transfer(sendUserMn, toAddress, amount) {
   console.log("start transfer");
   logger.info("start tranfer user mn " + sendUserMn + " to " + toAddress);
   try {
     hmy.wallet.addByMnemonic(sendUserMn);
     const txn = hmy.transactions.newTx({
-      from: fromUserAddress,
       to: toAddress,
       value: new Unit(amount).asOne().toWei(),
       // gas limit, you can use string
@@ -27,17 +26,22 @@ async function transfer(sendUserMn, toAddress, amount, fromUserAddress) {
       gasPrice: new Unit("1").asGwei().toWei(),
     });
     const signedTxn = await hmy.wallet.signTransaction(txn);
-    const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
+    const txnHash = await hmy.blockchain.sendTransaction(signedTxn).then();
     console.log("txn hash ", txnHash);
+    logger.info("txn hash " + txnHash);
     if (txnHash.error) {
+      logger.error({ err: txnHash.error }, " transfer error ");
       return null;
     }
-    // hmy.wallet.removeAccount(fromUserAddress);
     return txnHash.result;
   } catch (err) {
     logger.error({ err: err }, "transfer error ");
     return null;
   }
+}
+
+function removeAccount(address) {
+  hmy.wallet.removeAccount(address);
 }
 
 async function getAccountBalance(mnemonic) {
@@ -64,4 +68,4 @@ async function createAccount() {
   };
 }
 
-export { transfer, getAccountBalance, createAccount };
+export { transfer, getAccountBalance, createAccount, removeAccount };

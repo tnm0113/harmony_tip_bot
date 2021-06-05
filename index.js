@@ -3,7 +3,12 @@ import Snoowrap from "snoowrap";
 import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
 import { logger } from "./logger.js";
 import config from "./credentials.js";
-import { transfer, getAccountBalance, createAccount } from "./harmony.js";
+import {
+  transfer,
+  getAccountBalance,
+  createAccount,
+  removeAccount,
+} from "./harmony.js";
 
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
@@ -35,9 +40,10 @@ async function tip(fromUserName, toUserName, amount) {
     const toUser = await findOrCreate(toUserName);
     const fromUserMn = fromUser.mnemonic;
     const addressTo = toUser.oneAddress;
-    const fromUserAddress = fromUser.oneAddress;
-    const hash = await transfer(fromUserMn, addressTo, amount, fromUserAddress);
+    const fromUserAddress = fromUser.ethAddressq;
+    const hash = await transfer(fromUserMn, addressTo, amount);
     console.log("txnhash ", hash);
+    removeAccount(fromUserAddress);
     return hash;
   } catch (error) {
     console.log("catch error ", error);
