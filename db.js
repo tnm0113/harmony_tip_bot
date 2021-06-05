@@ -1,4 +1,6 @@
 import pkg from "sequelize";
+import { logger } from "./logger.js";
+
 const { Sequelize, DataTypes } = pkg;
 
 const sequelize = new Sequelize({
@@ -8,9 +10,9 @@ const sequelize = new Sequelize({
 
 try {
   sequelize.authenticate();
-  console.log("Connection has been established successfully.");
+  logger.info("Connection has been established successfully.");
 } catch (error) {
-  console.error("Unable to connect to the database:", error);
+  logger.error("Unable to connect to the database: " + error);
 }
 
 const User = sequelize.define("User", {
@@ -73,7 +75,7 @@ const TipLog = sequelize.define("TipLog", {
 TipLog.sync({});
 
 const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
-  console.log("create user");
+  logger.info("create user");
   return User.create({
     username: username,
     ethAddress: ethAddress,
@@ -85,7 +87,7 @@ const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
       return u;
     })
     .catch((e) => {
-      console.log("create user error ", e);
+      logger.error("create user error " + e);
       throw e;
     });
 };
@@ -98,26 +100,9 @@ const findUser = function (username) {
       return rs;
     })
     .catch((e) => {
-      console.log("findUse error ", e);
+      logger.error("findUse error " + e);
       throw e;
     });
-};
-
-const findOrCreateUser = function (
-  username,
-  ethAddress,
-  oneAddress,
-  balance,
-  mnemonic
-) {
-  return User.findOrCreate({
-    where: { username: username },
-    username: username,
-    ethAddress: ethAddress,
-    oneAddress: oneAddress,
-    balance: balance,
-    mnemonic: mnemonic,
-  });
 };
 
 const saveLog = function (
@@ -128,7 +113,7 @@ const saveLog = function (
   currency,
   action
 ) {
-  console.log("save log");
+  logger.info("save log");
   return TipLog.create({
     fromUser: fromUser,
     toUser: toUser,

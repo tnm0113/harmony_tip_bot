@@ -3,3 +3,4 @@ credentials.js
 database.sqlite
 build/
 log/
+config/

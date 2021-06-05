@@ -9,8 +9,7 @@ const hmy = new Harmony("https://api.s0.b.hmny.io/", {
 });
 
 async function transfer(sendUserMn, toAddress, amount) {
-  console.log("start transfer");
-  logger.info("start tranfer user mn " + sendUserMn + " to " + toAddress);
+  logger.info("start tranfer to " + toAddress);
   try {
     hmy.wallet.addByMnemonic(sendUserMn);
     const txn = hmy.transactions.newTx({
@@ -27,20 +26,20 @@ async function transfer(sendUserMn, toAddress, amount) {
     });
     const signedTxn = await hmy.wallet.signTransaction(txn);
     const txnHash = await hmy.blockchain.sendTransaction(signedTxn).then();
-    console.log("txn hash ", txnHash);
-    logger.info("txn hash " + txnHash);
+    logger.info("txn hash " + txnHash.result);
     if (txnHash.error) {
-      logger.error({ err: txnHash.error }, " transfer error ");
+      logger.error("transfer error " + txnHash.error);
       return null;
     }
     return txnHash.result;
   } catch (err) {
-    logger.error({ err: err }, "transfer error ");
+    logger.error("transfer error " + err);
     return null;
   }
 }
 
 function removeAccount(address) {
+  logger.debug("remove account of addrees " + address);
   hmy.wallet.removeAccount(address);
 }
 
@@ -48,13 +47,12 @@ async function getAccountBalance(mnemonic) {
   try {
     const account = hmy.wallet.addByMnemonic(mnemonic);
     const balance = await account.getBalance();
-    console.log("balance ", balance);
+    logger.debug("balance get from blockchain " + balance);
     const result = new Unit(balance.balance).asWei().toOne();
     logger.info("real balance in ONE " + result);
     return result;
   } catch (error) {
-    console.log("get balance error ", error);
-    logger.error({ err: error }, "get balance error ");
+    logger.error("get balance error " + error);
   }
 }
 

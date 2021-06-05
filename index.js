@@ -2,7 +2,7 @@ import { InboxStream } from "snoostorm";
 import Snoowrap from "snoowrap";
 import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
 import { logger } from "./logger.js";
-import config from "./credentials.js";
+import config from "config";
 import {
   transfer,
   getAccountBalance,
@@ -13,7 +13,8 @@ import {
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
 
-const client = new Snoowrap(config);
+const botConfig = config.get("bot");
+const client = new Snoowrap(botConfig);
 
 const inbox = new InboxStream(client, {
   filter: "mentions" | "messages",
@@ -42,12 +43,10 @@ async function tip(fromUserName, toUserName, amount) {
     const addressTo = toUser.oneAddress;
     const fromUserAddress = fromUser.ethAddressq;
     const hash = await transfer(fromUserMn, addressTo, amount);
-    console.log("txnhash ", hash);
     removeAccount(fromUserAddress);
     return hash;
   } catch (error) {
-    console.log("catch error ", error);
-    logger.error({ err: error }, "tip user error ");
+    logger.error("catch error " + error);
     return null;
   }
 }
@@ -64,8 +63,7 @@ async function getBalance(username) {
       };
     }
   } catch (error) {
-    console.log("get balance error ", error);
-    logger.error({ err: error }, "get balance error ");
+    logger.error("get balance error " + error);
   }
 }
 
@@ -104,13 +102,13 @@ async function returnHelp(username) {
       text: helpText,
     });
   } catch (error) {
-    logger.error({ err: error }, "return help error ");
+    logger.error("return help error " + error);
   }
 }
 
 async function processComment(item) {
   logger.info(
-    "receive comment mention from " + item.author + " body " + item.body
+    "receive comment mention from " + item.author.name + " body " + item.body
   );
   let c = client.getComment(item.parent_id);
   let splitCms = item.body
@@ -118,7 +116,7 @@ async function processComment(item) {
     .replace("\n", " ")
     .replace("\\", " ")
     .split(" ");
-  console.log("split cms ", splitCms);
+  logger.debug("split cms " + splitCms);
   if (splitCms.length > 3) {
     if (
       (splitCms[0] === "/u/tnm_tip_bot" || splitCms[0] === "u/tnm_tip_bot") &&
@@ -135,7 +133,7 @@ async function processComment(item) {
             txLink
         );
       } else {
-        console.log("tip failed");
+        logger.error("tip failed");
         item.reply(
           "Failed to tip, please check your comment, balance and try again"
         );
@@ -149,7 +147,7 @@ async function processComment(item) {
         "tip"
       );
     } else {
-      console.log("other case");
+      logger.debug("other case");
       item.reply(
         "Invalid command, send Priavte Message with help in the body to me to get help, tks !"
       );
@@ -284,8 +282,7 @@ inbox.on("item", async function (item) {
       }
     }
   } catch (error) {
-    console.log("process item error ", error);
-    logger.error({ err: error }, "process item error ");
+    logger.error("process item error " + error);
   }
 });
 

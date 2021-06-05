@@ -24,12 +24,15 @@
     "@harmony-js/network": "^0.1.56",
     "@harmony-js/transaction": "^0.1.56",
     "@harmony-js/utils": "^0.1.56",
+    "config": "^3.3.6",
     "pino": "^6.11.3",
     "pino-pretty": "^5.0.1",
     "sequelize": "^6.6.2",
     "snoostorm": "^1.5.2",
     "snoowrap": "^1.23.0",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5"
   },
   "type": "module",
   "devDependencies": {
