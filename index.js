@@ -48,7 +48,7 @@ async function tip(fromUserName, toUserName, amount) {
         const toUser = await findOrCreate(toUserName);
         const fromUserMn = fromUser.mnemonic;
         const addressTo = toUser.oneAddress;
-        const fromUserAddress = fromUser.ethAddressq;
+        const fromUserAddress = fromUser.ethAddress;
         const hash = await transfer(fromUserMn, addressTo, amount);
         removeAccount(fromUserAddress);
         return hash;
