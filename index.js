@@ -33,7 +33,7 @@ async function sendMessage(to, subject, text) {
     await client.composeMessage({ to: to, subject: subject, text: text });
 }
 
-async function tip(fromUserName, toUserName, amount) {
+async function tip(fromUser, toUserName, amount) {
     logger.info(
         "process tip request from " +
             fromUserName +
@@ -44,7 +44,6 @@ async function tip(fromUserName, toUserName, amount) {
             " ONE"
     );
     try {
-        const fromUser = await findUser(fromUserName);
         const toUser = await findOrCreate(toUserName);
         const fromUserMn = fromUser.mnemonic;
         const addressTo = toUser.oneAddress;
@@ -138,18 +137,25 @@ async function processComment(item) {
             let amount = Number.parseFloat(splitCms[2]);
             let currency = splitCms[3];
             const author = await c.author;
-            const txnHash = await tip(item.author.name, author.name, amount);
-            if (txnHash) {
-                const txLink =
-                    "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                item.reply(
-                    "You have tipped successfully, here is the tx link for that transaction " +
-                        txLink
-                );
+            const sendUser = await findUser(item.author.name);
+            if (sendUser) {
+                const txnHash = await tip(sendUser, author.name, amount);
+                if (txnHash) {
+                    const txLink =
+                        "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                    item.reply(
+                        "You have tipped successfully, here is the tx link for that transaction " +
+                            txLink
+                    );
+                } else {
+                    logger.error("tip failed");
+                    item.reply(
+                        "Failed to tip, please check your comment, balance and try again"
+                    );
+                }
             } else {
-                logger.error("tip failed");
                 item.reply(
-                    "Failed to tip, please check your comment, balance and try again"
+                    `Your account doesnt exist, please send "create" or "register" to create account`
                 );
             }
             await saveLog(
@@ -163,7 +169,7 @@ async function processComment(item) {
         } else {
             logger.debug("other case");
             item.reply(
-                "Invalid command, send Priavte Message with help in the body to me to get help, tks !"
+                "Invalid command, send Private Message with help in the body to me to get help, tks !"
             );
         }
     } else {
@@ -183,23 +189,31 @@ async function processSendRequest(item) {
         const amount = splitBody[1];
         const currency = splitBody[2];
         const toUser = splitBody[3];
-        const fromUser = item.author.name;
-        const txnHash = await tip(fromUser, toUser, amount);
-        if (txnHash) {
-            const txLink =
-                "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-            await client.composeMessage({
-                to: fromUser,
-                subject: "Send result",
-                text:
-                    "You have tipped successfully, here is the tx link for that transaction " +
-                    txLink,
-            });
+        const fromUser = await findUser(item.author.name);
+        if (fromUser) {
+            const txnHash = await tip(fromUser, toUser, amount);
+            if (txnHash) {
+                const txLink =
+                    "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                await client.composeMessage({
+                    to: item.author.name,
+                    subject: "Send result",
+                    text:
+                        "You have tipped successfully, here is the tx link for that transaction " +
+                        txLink,
+                });
+            } else {
+                await client.composeMessage({
+                    to: item.author.name,
+                    subject: "Send result:",
+                    text: "Failed to tip, please check your comment, balance and try again",
+                });
+            }
         } else {
             await client.composeMessage({
-                to: fromUser,
+                to: item.author.name,
                 subject: "Send result:",
-                text: "Failed to tip, please check your comment, balance and try again",
+                text: `Your account doesnt exist, please send "create" or "register" to create account`,
             });
         }
     }
