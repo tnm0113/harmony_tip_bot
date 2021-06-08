@@ -75,7 +75,7 @@ const TipLog = sequelize.define("TipLog", {
 TipLog.sync({});
 
 const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
-  logger.info("create user");
+  logger.info("create user " + username + " eth " + ethAddress + " one " + oneAddress);
   return User.create({
     username: username,
     ethAddress: ethAddress,

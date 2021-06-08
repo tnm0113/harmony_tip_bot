@@ -61,6 +61,7 @@ async function getAccountBalance(mnemonic) {
 async function createAccount() {
     const mnemonic = Wallet.generateMnemonic();
     const account = await wallet.createAccount(mnemonic);
+    logger.debug("account create " + JSON.stringify(account));
     return {
         ethAddress: account.address,
         oneAddress: account.bech32Address,

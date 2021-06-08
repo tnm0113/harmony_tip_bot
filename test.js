@@ -24,7 +24,7 @@ console.log("account bech32 addr ", acc1.bech32Address);
 
 // const mn2 = Wallet.generateMnemonic();
 const mn2 =
-  "ability repair service cabin coconut wash satisfy myself model border oppose vivid";
+  "salon orbit tornado album disagree between able garden cause loop say melt";
 console.log("mnemonic ", mn2);
 let acc2 = wallet.addByMnemonic(mn2);
 console.log("account addr ", acc2.address);
