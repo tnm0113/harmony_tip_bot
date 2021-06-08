@@ -24,7 +24,7 @@ console.log("account bech32 addr ", acc1.bech32Address);
 
 // const mn2 = Wallet.generateMnemonic();
 const mn2 =
-  "guide derive autumn coyote wrestle shoot unable fence casino thrive faint huge";
+  "ability repair service cabin coconut wash satisfy myself model border oppose vivid";
 console.log("mnemonic ", mn2);
 let acc2 = wallet.addByMnemonic(mn2);
 console.log("account addr ", acc2.address);
@@ -41,28 +41,28 @@ console.log("account balance ", acc2.balance);
 
 // console.log(acc.bech32Address);
 
-const factory = new TransactionFactory(hmy);
-hmy.wallet.addByMnemonic(mn1);
+// const factory = new TransactionFactory(hmy);
+// hmy.wallet.addByMnemonic(mn1);
 
-const txn = hmy.transactions.newTx({
-  // to: "one14nt2lnn0jssxxpvmelmpxrvuktamr3ahhud8j4",
-  to: "one1j4792efsaqm8xf04erfwzcucxz3z5dq7yx90wf",
-  value: new Unit(100000000).asOne().toWei(),
-  // gas limit, you can use string
-  gasLimit: "21000",
-  // send token from shardID
-  shardID: 0,
-  // send token to toShardID
-  toShardID: 0,
-  // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
-  gasPrice: new Unit("1").asGwei().toWei(),
-});
+// const txn = hmy.transactions.newTx({
+//   // to: "one14nt2lnn0jssxxpvmelmpxrvuktamr3ahhud8j4",
+//   to: "one1j4792efsaqm8xf04erfwzcucxz3z5dq7yx90wf",
+//   value: new Unit(100000000).asOne().toWei(),
+//   // gas limit, you can use string
+//   gasLimit: "21000",
+//   // send token from shardID
+//   shardID: 0,
+//   // send token to toShardID
+//   toShardID: 0,
+//   // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
+//   gasPrice: new Unit("1").asGwei().toWei(),
+// });
 
-hmy.wallet.signTransaction(txn).then((signedTxn) => {
-  signedTxn.sendTransaction().then(([tx, hash]) => {
-    console.log("tx hash: " + hash);
-    signedTxn.confirm(hash).then((response) => {
-      console.log(response.receipt);
-    });
-  });
-});
+// hmy.wallet.signTransaction(txn).then((signedTxn) => {
+//   signedTxn.sendTransaction().then(([tx, hash]) => {
+//     console.log("tx hash: " + hash);
+//     signedTxn.confirm(hash).then((response) => {
+//       console.log(response.receipt);
+//     });
+//   });
+// });
