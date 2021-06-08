@@ -8,10 +8,12 @@ const hmy = new Harmony("https://api.s0.b.hmny.io/", {
     chainId: ChainID.HmyTestnet,
 });
 
+const wallet = new Wallet(hmy);
+
 async function transfer(sendUserMn, toAddress, amount) {
     logger.info("start tranfer to " + toAddress);
     try {
-        hmy.wallet.addByMnemonic(sendUserMn);
+        wallet.addByMnemonic(sendUserMn);
         const txn = hmy.transactions.newTx({
             to: toAddress,
             value: new Unit(amount).asOne().toWei(),
@@ -24,7 +26,7 @@ async function transfer(sendUserMn, toAddress, amount) {
             // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
             gasPrice: new Unit("1").asGwei().toWei(),
         });
-        const signedTxn = await hmy.wallet.signTransaction(txn);
+        const signedTxn = await wallet.signTransaction(txn);
         const txnHash = await hmy.blockchain.sendTransaction(signedTxn).then();
         logger.info("txn hash " + txnHash.result);
         if (txnHash.error) {
@@ -40,12 +42,12 @@ async function transfer(sendUserMn, toAddress, amount) {
 
 function removeAccount(address) {
     logger.debug("remove account of addrees " + address);
-    hmy.wallet.removeAccount(address);
+    wallet.removeAccount(address);
 }
 
 async function getAccountBalance(mnemonic) {
     try {
-        const account = hmy.wallet.addByMnemonic(mnemonic);
+        const account = wallet.addByMnemonic(mnemonic);
         const balance = await account.getBalance();
         logger.debug("balance get from blockchain " + JSON.stringify(balance));
         const result = new Unit(balance.balance).asWei().toOne();
@@ -58,7 +60,7 @@ async function getAccountBalance(mnemonic) {
 
 async function createAccount() {
     const mnemonic = Wallet.generateMnemonic();
-    const account = await hmy.wallet.createAccount(mnemonic);
+    const account = wallet.createAccount(mnemonic);
     return {
         ethAddress: account.address,
         oneAddress: account.bech32Address,

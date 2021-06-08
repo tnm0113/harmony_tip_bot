@@ -62,6 +62,7 @@ async function getBalance(username) {
         const user = await findUser(username);
         if (user) {
             const b = await getAccountBalance(user.mnemonic);
+            removeAccount(user.ethAddress);
             return {
                 oneAddress: user.oneAddress,
                 ethAddress: user.ethAddress,
