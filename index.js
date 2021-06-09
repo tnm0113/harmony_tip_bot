@@ -12,7 +12,7 @@ import {
 
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
-
+const regexUser = /\/u\/(.)*/g;
 const botConfig = config.get("bot");
 const client = new Snoowrap(botConfig);
 
@@ -131,17 +131,29 @@ async function processComment(item) {
         .split(" ");
     logger.debug("split cms " + splitCms);
     if (splitCms.length > 3) {
-        if (
-            (splitCms[0] === "/u/tnm_tip_bot" ||
-                splitCms[0] === "u/tnm_tip_bot") &&
-            splitCms[1] === "tip"
-        ) {
-            let amount = Number.parseFloat(splitCms[2]);
-            let currency = splitCms[3];
-            const author = await c.author;
+        if (splitCms[1] === "tip") {
+            let amount = -1;
+            let currency = "";
+            let toUser = "";
+            if (splitCms[2].match(regexUser)){
+                if (splitCms.length > 4){
+                    toUser = splitCms[2].replace("/u/","");
+                    amount = Number.parseFloat(splitCms[3]);
+                    currency = splitCms[4];
+                } else {
+                    item.reply(
+                        "Failed to tip, please check your comment, balance and try again"
+                    );
+                }
+            } else {
+                amount = Number.parseFloat(splitCms[2]);
+                currency = splitCms[3];
+                const author = await c.author;
+                toUser = author.name;
+            }
             const sendUser = await findUser(item.author.name);
             if (sendUser) {
-                const txnHash = await tip(sendUser, author.name, amount);
+                const txnHash = await tip(sendUser, toUser, amount);
                 if (txnHash) {
                     const txLink =
                         "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
