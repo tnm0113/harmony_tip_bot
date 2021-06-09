@@ -125,13 +125,12 @@ async function processComment(item) {
     );
     let c = client.getComment(item.parent_id);
     let splitCms = item.body
-        .toLowerCase()
         .replace("\n", " ")
         .replace("\\", " ")
         .split(" ");
     logger.debug("split cms " + splitCms);
     if (splitCms.length > 3) {
-        if (splitCms[1] === "tip") {
+        if (splitCms[1].toLowerCase() === "tip") {
             let amount = -1;
             let currency = "";
             let toUser = "";
@@ -140,6 +139,7 @@ async function processComment(item) {
                     toUser = splitCms[2].replace("/u/","");
                     amount = Number.parseFloat(splitCms[3]);
                     currency = splitCms[4];
+                    logger.debug("tip to user " + toUser +  " amount " + amount);
                 } else {
                     item.reply(
                         "Failed to tip, please check your comment, balance and try again"
