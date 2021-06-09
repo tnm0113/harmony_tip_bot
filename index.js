@@ -36,7 +36,7 @@ async function sendMessage(to, subject, text) {
 async function tip(fromUser, toUserName, amount) {
     logger.info(
         "process tip request from " +
-            fromUserName +
+            fromUser.name +
             " to " +
             toUserName +
             " amount " +
