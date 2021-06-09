@@ -27,6 +27,7 @@ const mn2 =
   "salon orbit tornado album disagree between able garden cause loop say melt";
 console.log("mnemonic ", mn2);
 let acc2 = wallet.addByMnemonic(mn2);
+// console.log("account create " + JSON.stringify(acc2));
 console.log("account addr ", acc2.address);
 console.log("account bech32 addr ", acc2.bech32Address);
 console.log("account balance ", acc2.balance);

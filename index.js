@@ -82,7 +82,7 @@ async function findOrCreate(username) {
         if (u) {
             return u;
         } else {
-            const blockchainInfo = await createAccount();
+            const blockchainInfo = createAccount();
             logger.debug("blockchainInfo " + JSON.stringify(blockchainInfo));
             return createUser(
                 username,
