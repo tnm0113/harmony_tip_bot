@@ -27,7 +27,7 @@ async function transfer(sendUserMn, toAddress, amount) {
             gasPrice: new Unit("1").asGwei().toWei(),
         });
         const signedTxn = await wallet.signTransaction(txn);
-        const txnHash = await hmy.blockchain.sendTransaction(signedTxn).then();
+        const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
         logger.info("txn hash " + txnHash.result);
         if (txnHash.error) {
             logger.error("transfer error " + txnHash.error);
