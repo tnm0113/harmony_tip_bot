@@ -47,7 +47,7 @@ function removeAccount(address) {
 
 async function getAccountBalance(mnemonic) {
     try {
-        const account = wallet.addByMnemonic(mnemonic);
+        const account = hmy.wallet.addByMnemonic(mnemonic);
         const balance = await account.getBalance();
         logger.debug("balance get from blockchain " + JSON.stringify(balance));
         const result = new Unit(balance.balance).asWei().toOne();
