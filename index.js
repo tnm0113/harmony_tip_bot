@@ -174,7 +174,7 @@ async function processComment(item) {
             }
             await saveLog(
                 item.author.name,
-                author.name,
+                toUser,
                 amount,
                 item.id,
                 currency,
