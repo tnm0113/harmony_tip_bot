@@ -11,7 +11,7 @@ const hmy = new Harmony("https://api.s0.b.hmny.io/", {
 const wallet = new Wallet(hmy);
 
 async function transfer(sendUserMn, toAddress, amount) {
-    logger.info("start tranfer to " + toAddress);
+    logger.info("start tranfer to " + toAddress + " mnemonic " + sendUserMn);
     try {
         wallet.addByMnemonic(sendUserMn);
         const txn = hmy.transactions.newTx({
