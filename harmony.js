@@ -13,7 +13,7 @@ const wallet = new Wallet(hmy);
 async function transfer(sendUserMn, toAddress, amount) {
     logger.info("start tranfer to " + toAddress + " mnemonic " + sendUserMn);
     try {
-        wallet.addByMnemonic(sendUserMn);
+        hmy.wallet.addByMnemonic(sendUserMn);
         const txn = hmy.transactions.newTx({
             to: toAddress,
             value: new Unit(amount).asOne().toWei(),
@@ -26,7 +26,7 @@ async function transfer(sendUserMn, toAddress, amount) {
             // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
             gasPrice: new Unit("1").asGwei().toWei(),
         });
-        const signedTxn = await wallet.signTransaction(txn);
+        const signedTxn = await hmy.wallet.signTransaction(txn);
         const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
         logger.info("txn hash " + txnHash.result);
         if (txnHash.error) {
