@@ -42,7 +42,7 @@ async function transfer(sendUserMn, toAddress, amount) {
 
 function removeAccount(address) {
     logger.debug("remove account of addrees " + address);
-    wallet.removeAccount(address);
+    hmy.wallet.removeAccount(address);
 }
 
 async function getAccountBalance(mnemonic) {
@@ -60,7 +60,7 @@ async function getAccountBalance(mnemonic) {
 
 function createAccount() {
     const mnemonic = Wallet.generateMnemonic();
-    const account = wallet.addByMnemonic(mnemonic);
+    const account = hmy.wallet.addByMnemonic(mnemonic);
     logger.debug("account create " + account.address + " one address " + account.bech32Address);
     return {
         ethAddress: account.address,
