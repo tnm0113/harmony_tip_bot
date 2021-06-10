@@ -12,7 +12,7 @@ import {
 
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
-const regexUser = /\/u\/(.)*/g;
+const regexUser = /\/?u\/(.)*/g;
 const botConfig = config.get("bot");
 const client = new Snoowrap(botConfig);
 
@@ -139,7 +139,7 @@ async function processComment(item) {
                     toUser = splitCms[2].replace("/u/","");
                     amount = Number.parseFloat(splitCms[3]);
                     currency = splitCms[4];
-                    logger.debug("tip to user " + toUser +  " amount " + amount);
+                    logger.debug("send from comment to user " + toUser +  " amount " + amount);
                 } else {
                     item.reply(
                         "Failed to tip, please check your comment, balance and try again"
@@ -150,6 +150,7 @@ async function processComment(item) {
                 currency = splitCms[3];
                 const author = await c.author;
                 toUser = author.name;
+                logger.info("tip from comment to user " + toUser + " amount " + amount);
             }
             const sendUser = await findUser(item.author.name);
             if (sendUser) {
