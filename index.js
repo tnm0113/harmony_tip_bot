@@ -52,7 +52,7 @@ async function tip(fromUser, toUserName, amount) {
         removeAccount(fromUserAddress);
         return hash;
     } catch (error) {
-        logger.error("catch error " + error);
+        logger.error("catch error " + JSON.stringify(error));
         return null;
     }
 }
@@ -72,7 +72,7 @@ async function getBalance(username) {
             return null;
         }
     } catch (error) {
-        logger.error("get balance error " + error);
+        logger.error("get balance error " + JSON.stringify(error));
     }
 }
 
@@ -93,7 +93,7 @@ async function findOrCreate(username) {
             );
         }
     } catch (error) {
-        logger.error({ err: error }, "findOrCreate user error ");
+        logger.error("findOrCreate user error " + JSON.stringify(error));
         return null;
     }
 }
@@ -112,7 +112,7 @@ async function returnHelp(username) {
             text: helpText,
         });
     } catch (error) {
-        logger.error("return help error " + error);
+        logger.error("return help error " + JSON.stringify(error));
     }
 }
 
@@ -329,7 +329,7 @@ inbox.on("item", async function (item) {
             }
         }
     } catch (error) {
-        logger.error("process item error " + error);
+        logger.error("process item error " + JSON.stringify(error));
     }
 });
 

@@ -87,7 +87,7 @@ const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
       return u;
     })
     .catch((e) => {
-      logger.error("create user error " + e);
+      logger.error("create user error " + JSON.stringify(e));
       throw e;
     });
 };
@@ -100,7 +100,7 @@ const findUser = function (username) {
       return rs;
     })
     .catch((e) => {
-      logger.error("findUse error " + e);
+      logger.error("findUse error " + JSON.stringify(e));
       throw e;
     });
 };
