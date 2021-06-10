@@ -16,7 +16,7 @@ async function transfer(sendUserMn, toAddress, amount) {
         hmy.wallet.addByMnemonic(sendUserMn);
         const txn = hmy.transactions.newTx({
             to: toAddress,
-            value: new Unit(1).asOne().toWei(),
+            value: new Unit(parseFloat(amount)).asOne().toWei(),
             // gas limit, you can use string
             gasLimit: "21000",
             // send token from shardID

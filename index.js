@@ -137,7 +137,7 @@ async function processComment(item) {
             if (splitCms[2].match(regexUser)){
                 if (splitCms.length > 4){
                     toUser = splitCms[2].replace("/u/","");
-                    amount = Number.parseFloat(splitCms[3]);
+                    amount = splitCms[3];
                     currency = splitCms[4];
                     logger.debug("send from comment to user " + toUser +  " amount " + amount);
                 } else {
@@ -146,7 +146,7 @@ async function processComment(item) {
                     );
                 }
             } else {
-                amount = Number.parseFloat(splitCms[2]);
+                amount = splitCms[2];
                 currency = splitCms[3];
                 const author = await c.author;
                 toUser = author.name;
