@@ -136,7 +136,7 @@ async function processComment(item) {
             let toUser = "";
             if (splitCms[2].match(regexUser)){
                 if (splitCms.length > 4){
-                    toUser = splitCms[2].replace("/u/","");
+                    toUser = splitCms[2].replace("/u/","").replace("u/","");
                     amount = splitCms[3];
                     currency = splitCms[4];
                     logger.debug("send from comment to user " + toUser +  " amount " + amount);
