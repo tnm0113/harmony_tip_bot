@@ -307,23 +307,38 @@ async function processComment(item){
         .split(" ");
     logger.debug("split cms " + splitCms);
     if (splitCms[0] === botConfig.command){
-        const sendUserName = item.author.name;
-        let amount = splitCms[1];
-        let toUserName = "";
-        const sendUser = await findUserByUsername(sendUserName);
-        if (sendUser){
-            if (splitCms.length === 2){
-                const parentComment = client.getComment(item.parent_id);
-                toUserName = await (await parentComment).author.name;
-            } else if (splitCms.length === 3){
-                toUserName = splitCms[2].replace("/u/","").replace("u/","");
-            }
-            tip(sendUser, toUserName, amount);
+        const log = await checkExistedInLog(item.id);
+        if (log){
+            logger.info("comment already processed");
         } else {
-            item.reply(
-                `Your account doesnt exist, please send "create" or "register" to create account`
+            const sendUserName = item.author.name;
+            let amount = splitCms[1];
+            let toUserName = "";
+            const sendUser = await findUserByUsername(sendUserName);
+            if (sendUser){
+                if (splitCms.length === 2){
+                    const parentComment = client.getComment(item.parent_id);
+                    toUserName = await (await parentComment).author.name;
+                } else if (splitCms.length === 3){
+                    toUserName = splitCms[2].replace("/u/","").replace("u/","");
+                }
+                tip(sendUser, toUserName, amount);
+            } else {
+                item.reply(
+                    `Your account doesnt exist, please send "create" or "register" to create account`
+                );
+            }
+            await saveLog(
+                sendUserName,
+                toUserName,
+                amount,
+                item.id,
+                "ONE",
+                "tip"
             );
         }
+    } else {
+        logger.debug("comment not valid command");
     }
 }
 
