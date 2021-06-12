@@ -314,7 +314,7 @@ async function processComment(item){
             const sendUserName = item.author.name;
             let amount = splitCms[1];
             let toUserName = "";
-            const sendUser = await findUserByUsername(sendUserName);
+            const sendUser = await findUser(sendUserName);
             if (sendUser){
                 if (splitCms.length === 2){
                     const parentComment = client.getComment(item.parent_id);
@@ -322,7 +322,20 @@ async function processComment(item){
                 } else if (splitCms.length === 3){
                     toUserName = splitCms[2].replace("/u/","").replace("u/","");
                 }
-                tip(sendUser, toUserName, amount);
+                const txnHash = await tip(sendUser, toUserName, amount);
+                if (txnHash) {
+                    const txLink =
+                        "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                    item.reply(
+                        "You have tipped successfully, here is the tx link for that transaction " +
+                            txLink
+                    );
+                } else {
+                    logger.error("tip failed");
+                    item.reply(
+                        "Failed to tip, please check your comment, balance and try again"
+                    );
+                }
             } else {
                 item.reply(
                     `Your account doesnt exist, please send "create" or "register" to create account`
