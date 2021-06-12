@@ -1,4 +1,4 @@
-import { InboxStream } from "snoostorm";
+import { InboxStream, CommentStream } from "snoostorm";
 import Snoowrap from "snoowrap";
 import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
 import { logger } from "./logger.js";
@@ -13,20 +13,15 @@ import {
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
 const regexUser = /\/?u\/(.)*/g;
+const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
-const client = new Snoowrap(botConfig);
 
+const client = new Snoowrap(snoowrapConfig);
 client.config({
     requestDelay: 1000,
     continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
     logger: logger,
-});
-
-const inbox = new InboxStream(client, {
-    filter: "mentions" | "messages",
-    limit: 0,
-    pollTime: 2000,
 });
 
 async function sendMessage(to, subject, text) {
@@ -116,7 +111,7 @@ async function returnHelp(username) {
     }
 }
 
-async function processComment(item) {
+async function processMention(item) {
     logger.info(
         "receive comment mention from " +
             item.author.name +
@@ -201,35 +196,39 @@ async function processSendRequest(item) {
         .replace("\\", " ")
         .split(" ");
     if (splitBody.length > 3) {
-        const amount = splitBody[1];
-        const currency = splitBody[2];
-        const toUser = splitBody[3];
-        const fromUser = await findUser(item.author.name);
-        if (fromUser) {
-            const txnHash = await tip(fromUser, toUser, amount);
-            if (txnHash) {
-                const txLink =
-                    "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                await client.composeMessage({
-                    to: item.author.name,
-                    subject: "Send result",
-                    text:
-                        "You have tipped successfully, here is the tx link for that transaction " +
-                        txLink,
-                });
+        try {
+            const amount = splitBody[1];
+            const currency = splitBody[2];
+            const toUser = splitBody[3];
+            const fromUser = await findUser(item.author.name);
+            if (fromUser) {
+                const txnHash = await tip(fromUser, toUser, amount);
+                if (txnHash) {
+                    const txLink =
+                        "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                    await client.composeMessage({
+                        to: item.author.name,
+                        subject: "Send result",
+                        text:
+                            "You have tipped successfully, here is the tx link for that transaction " +
+                            txLink,
+                    });
+                } else {
+                    await client.composeMessage({
+                        to: item.author.name,
+                        subject: "Send result:",
+                        text: "Failed to tip, please check your comment, balance and try again",
+                    });
+                }
             } else {
                 await client.composeMessage({
                     to: item.author.name,
                     subject: "Send result:",
-                    text: "Failed to tip, please check your comment, balance and try again",
+                    text: `Your account doesnt exist, please send "create" or "register" to create account`,
                 });
             }
-        } else {
-            await client.composeMessage({
-                to: item.author.name,
-                subject: "Send result:",
-                text: `Your account doesnt exist, please send "create" or "register" to create account`,
-            });
+        } catch (error) {
+            logger.error("process send request error " + JSON.stringify(error));
         }
     }
 }
@@ -295,43 +294,101 @@ async function processCreateRequest(item) {
     }
 }
 
-inbox.on("item", async function (item) {
-    try {
-        if (item.new) {
-            const log = await checkExistedInLog(item.id);
-            if (log) {
-                logger.info("tip action already processed");
-            } else {
-                if (item.was_comment) {
-                    processComment(item);
+async function processComment(item){
+    logger.info(
+        "receive comment from " +
+            item.author.name +
+            " body " +
+            item.body
+    );
+    let splitCms = item.body
+        .replace("\n", " ")
+        .replace("\\", " ")
+        .split(" ");
+    logger.debug("split cms " + splitCms);
+    if (splitCms[0] === botConfig.command){
+        const sendUserName = item.author.name;
+        let amount = splitCms[1];
+        let toUserName = "";
+        const sendUser = await findUserByUsername(sendUserName);
+        if (sendUser){
+            if (splitCms.length === 2){
+                const parentComment = client.getComment(item.parent_id);
+                toUserName = await (await parentComment).author.name;
+            } else if (splitCms.length === 3){
+                toUserName = splitCms[2].replace("/u/","").replace("u/","");
+            }
+            tip(sendUser, toUserName, amount);
+        } else {
+            item.reply(
+                `Your account doesnt exist, please send "create" or "register" to create account`
+            );
+        }
+    }
+}
+
+try {
+    const inbox = new InboxStream(client, {
+        filter: "mentions" | "messages",
+        limit: 0,
+        pollTime: 2000,
+    });
+
+    const comments = new CommentStream(client, {
+        subreddit: botConfig.subreddit,
+        limit: 10,
+        pollTime: 2000,
+    })
+
+    comments.on("item", async function(item){
+        try {
+            processComment(item);
+        } catch (error) {
+            logger.error("process comment error " + JSON.stringify(error));
+        }
+    });
+    
+    inbox.on("item", async function (item) {
+        try {
+            if (item.new) {
+                const log = await checkExistedInLog(item.id);
+                if (log) {
+                    logger.info("tip action already processed");
                 } else {
-                    logger.info(
-                        "process private message from " +
-                            item.author.name +
-                            " body " +
-                            item.body
-                    );
-                    if (
-                        item.body.toLowerCase() === "create" ||
-                        item.body.toLowerCase() === "register"
-                    ) {
-                        processCreateRequest(item);
-                    } else if (item.body.toLowerCase() === "help") {
-                        returnHelp(item.author.name);
-                    } else if (item.body.toLowerCase().match(regexSend)) {
-                        processSendRequest(item);
-                    } else if (item.body.toLowerCase() === "info") {
-                        processInfoRequest(item);
-                    } else if (item.body.toLowerCase().match(regexWithdraw)) {
-                        processWithdrawRequest(item);
+                    if (item.was_comment) {
+                        processMention(item);
+                    } else {
+                        logger.info(
+                            "process private message from " +
+                                item.author.name +
+                                " body " +
+                                item.body
+                        );
+                        if (
+                            item.body.toLowerCase() === "create" ||
+                            item.body.toLowerCase() === "register"
+                        ) {
+                            processCreateRequest(item);
+                        } else if (item.body.toLowerCase() === "help") {
+                            returnHelp(item.author.name);
+                        } else if (item.body.toLowerCase().match(regexSend)) {
+                            processSendRequest(item);
+                        } else if (item.body.toLowerCase() === "info") {
+                            processInfoRequest(item);
+                        } else if (item.body.toLowerCase().match(regexWithdraw)) {
+                            processWithdrawRequest(item);
+                        }
+                        await item.markAsRead();
                     }
-                    await item.markAsRead();
                 }
             }
+        } catch (error) {
+            logger.error("process item inbox error " + JSON.stringify(error));
         }
-    } catch (error) {
-        logger.error("process item error " + JSON.stringify(error));
-    }
-});
+    });
 
-inbox.on("end", () => logger.info("Inbox subcribe ended!!!"));
+    inbox.on("end", () => logger.info("Inbox subcribe ended!!!"));
+} catch (error){
+    logger.error("snoowrap error " + JSON.stringify(error));
+}
+

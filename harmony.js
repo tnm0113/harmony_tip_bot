@@ -39,7 +39,7 @@ async function transfer(sendUserMn, toAddress, amount) {
         const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
         logger.info("txn hash " + txnHash.result);
         if (txnHash.error) {
-            logger.error("txn hash error " + JSON.stringify(txnHash.error));
+            logger.error("txn hash error " + JSON.stringify(txnHash));
             return null;
         }
         return txnHash.result;
