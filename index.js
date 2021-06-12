@@ -295,6 +295,8 @@ async function processCreateRequest(item) {
 }
 
 async function processComment(item){
+    if (item.author.name === botConfig.name)
+        return;
     logger.info(
         "receive comment from " +
             item.author.name +
