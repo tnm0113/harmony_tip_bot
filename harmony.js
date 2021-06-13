@@ -2,25 +2,35 @@ import { ChainID, ChainType, Unit } from "@harmony-js/utils";
 import { Harmony } from "@harmony-js/core";
 import { logger } from "./logger.js";
 import { Wallet } from "@harmony-js/account";
+import { getAllUser } from "./db.js";
 
 const hmy = new Harmony("https://api.s0.b.hmny.io/", {
     chainType: ChainType.Harmony,
     chainId: ChainID.HmyTestnet,
 });
 
-const wallet = new Wallet(hmy);
+async function addAllAccounts(){
+    const users = await getAllUser();
+    users.forEach((user) => {
+        hmy.wallet.addByMnemonic(user.mnemonic);
+    })
+    hmy.wallet.accounts.forEach(addr => {
+        const account = hmy.wallet.getAccount(addr);
+        logger.debug("one address " + account.bech32Address + " eth " + account.address);
+    });
+}
 
-async function transfer(sendUserMn, toAddress, amount) {
+async function transfer(sendAddress, toAddress, amount) {
     logger.info(
         "start tranfer to " +
             toAddress +
-            " mnemonic " +
-            sendUserMn +
+            " from address " +
+            sendAddress +
             " amount " +
             amount
     );
     try {
-        hmy.wallet.addByMnemonic(sendUserMn);
+        const account = hmy.wallet.getAccount(sendAddress);
         const txn = hmy.transactions.newTx({
             to: toAddress,
             value: new Unit(parseFloat(amount)).asOne().toWei(),
@@ -33,9 +43,7 @@ async function transfer(sendUserMn, toAddress, amount) {
             // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
             gasPrice: new Unit("1").asGwei().toWei(),
         });
-        logger.debug("txn ", JSON.stringify(txn));
-        const signedTxn = await hmy.wallet.signTransaction(txn);
-        logger.debug("signedTxn ", JSON.stringify(signedTxn));
+        const signedTxn = await account.signTransaction(txn);
         const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
         logger.info("txn hash " + txnHash.result);
         if (txnHash.error) {
@@ -44,7 +52,7 @@ async function transfer(sendUserMn, toAddress, amount) {
         }
         return txnHash.result;
     } catch (err) {
-        logger.error("transfer error " + JSON.stringify(err));
+        logger.error("transfer error " + JSON.stringify(err) + " " + err);
         return null;
     }
 }
@@ -54,9 +62,10 @@ function removeAccount(address) {
     hmy.wallet.removeAccount(address);
 }
 
-async function getAccountBalance(mnemonic) {
+async function getAccountBalance(address) {
     try {
-        const account = hmy.wallet.addByMnemonic(mnemonic);
+        // const account = hmy.wallet.addByMnemonic(mnemonic);
+        const account = hmy.wallet.getAccount(address);
         const balance = await account.getBalance();
         logger.debug("balance get from blockchain " + JSON.stringify(balance));
         const result = new Unit(balance.balance).asWei().toOne();
@@ -83,4 +92,4 @@ function createAccount() {
     };
 }
 
-export { transfer, getAccountBalance, createAccount, removeAccount };
+export { transfer, getAccountBalance, createAccount, removeAccount, addAllAccounts };

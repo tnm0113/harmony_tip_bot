@@ -8,6 +8,7 @@ import {
     getAccountBalance,
     createAccount,
     removeAccount,
+    addAllAccounts
 } from "./harmony.js";
 
 const regexSend = /send\s(.*)/g;
@@ -40,11 +41,11 @@ async function tip(fromUser, toUserName, amount) {
     );
     try {
         const toUser = await findOrCreate(toUserName);
-        const fromUserMn = fromUser.mnemonic;
+        // const fromUserMn = fromUser.mnemonic;
         const addressTo = toUser.oneAddress;
         const fromUserAddress = fromUser.ethAddress;
-        const hash = await transfer(fromUserMn, addressTo, amount);
-        removeAccount(fromUserAddress);
+        const hash = await transfer(fromUserAddress, addressTo, amount);
+        // removeAccount(fromUserAddress);
         return hash;
     } catch (error) {
         logger.error("catch error " + JSON.stringify(error));
@@ -56,7 +57,7 @@ async function getBalance(username) {
     try {
         const user = await findUser(username);
         if (user) {
-            const b = await getAccountBalance(user.mnemonic);
+            const b = await getAccountBalance(user.ethAddress);
             removeAccount(user.ethAddress);
             return {
                 oneAddress: user.oneAddress,
@@ -358,6 +359,8 @@ async function processComment(item){
 }
 
 try {
+    addAllAccounts();
+
     const inbox = new InboxStream(client, {
         filter: "mentions" | "messages",
         limit: 0,
