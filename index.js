@@ -7,7 +7,6 @@ import {
     transfer,
     getAccountBalance,
     createAccount,
-    removeAccount,
     addAllAccounts
 } from "./harmony.js";
 
@@ -45,7 +44,6 @@ async function tip(fromUser, toUserName, amount) {
         const addressTo = toUser.oneAddress;
         const fromUserAddress = fromUser.ethAddress;
         const hash = await transfer(fromUserAddress, addressTo, amount);
-        // removeAccount(fromUserAddress);
         return hash;
     } catch (error) {
         logger.error("catch error " + JSON.stringify(error));
@@ -58,7 +56,6 @@ async function getBalance(username) {
         const user = await findUser(username);
         if (user) {
             const b = await getAccountBalance(user.ethAddress);
-            removeAccount(user.ethAddress);
             return {
                 oneAddress: user.oneAddress,
                 ethAddress: user.ethAddress,

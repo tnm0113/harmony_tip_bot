@@ -57,11 +57,6 @@ async function transfer(sendAddress, toAddress, amount) {
     }
 }
 
-function removeAccount(address) {
-    logger.debug("remove account of addrees " + address);
-    hmy.wallet.removeAccount(address);
-}
-
 async function getAccountBalance(address) {
     try {
         // const account = hmy.wallet.addByMnemonic(mnemonic);
@@ -92,4 +87,4 @@ function createAccount() {
     };
 }
 
-export { transfer, getAccountBalance, createAccount, removeAccount, addAllAccounts };
+export { transfer, getAccountBalance, createAccount, addAllAccounts };
