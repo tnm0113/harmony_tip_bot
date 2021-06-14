@@ -341,60 +341,66 @@ async function processComment(item){
             item.author.name +
             " body " +
             item.body
-    );
-    let splitCms = item.body
-        .toLowerCase()
-        .replace("\n", " ")
-        .replace("\\", " ")
-        .split(" ");
-    logger.debug("split cms " + splitCms);
-    if (splitCms[0] === botConfig.command){
-        const log = await checkExistedInLog(item.id);
-        if (log){
-            logger.info("comment already processed");
-        } else {
-            const sendUserName = item.author.name.toLowerCase();
-            let amount = splitCms[1];
-            let toUserName = "";
-            const sendUser = await findUser(sendUserName);
-            if (sendUser){
-                if (splitCms.length === 2){
-                    const parentComment = client.getComment(item.parent_id);
-                    toUserName = await parentComment.author.name.toLowerCase();
-                } else if (splitCms.length === 3){
-                    toUserName = splitCms[2].replace("/u/","").replace("u/","");
-                }
-                const txnHash = await tip(sendUser, toUserName, amount);
-                if (txnHash) {
-                    const txLink =
-                        "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                    item.reply(
-                        "You have tipped successfully, here is the tx link for that transaction " +
-                            txLink
-                    );
-                } else {
-                    logger.error("tip failed");
-                    item.reply(
-                        "Failed to tip, please check your comment, balance and try again"
-                    );
-                }
+    );        
+    try {
+        let splitCms = item.body
+            .toLowerCase()
+            .replace("\n", " ")
+            .replace("\\", " ")
+            .split(" ");
+        logger.debug("split cms " + splitCms);
+        if (splitCms[0] === botConfig.command){
+            const log = await checkExistedInLog(item.id);
+            if (log){
+                logger.info("comment already processed");
             } else {
-                item.reply(
-                    `Your account doesnt exist, please send "create" or "register" to create account`
+                const sendUserName = item.author.name.toLowerCase();
+                let amount = splitCms[1];
+                let toUserName = "";
+                const sendUser = await findUser(sendUserName);
+                if (sendUser){
+                    if (splitCms.length === 2){
+                        const parentComment = client.getComment(item.parent_id);
+                        toUserName = await parentComment.author.name;
+                        toUserName = toUserName.toLowerCase();
+                    } else if (splitCms.length === 3){
+                        toUserName = splitCms[2].replace("/u/","").replace("u/","");
+                    }
+                    const txnHash = await tip(sendUser, toUserName, amount);
+                    if (txnHash) {
+                        const txLink =
+                            "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                        item.reply(
+                            "You have tipped successfully, here is the tx link for that transaction " +
+                                txLink
+                        );
+                    } else {
+                        logger.error("tip failed");
+                        item.reply(
+                            "Failed to tip, please check your comment, balance and try again"
+                        );
+                    }
+                } else {
+                    item.reply(
+                        `Your account doesnt exist, please send "create" or "register" to create account`
+                    );
+                }
+                await saveLog(
+                    sendUserName,
+                    toUserName,
+                    amount,
+                    item.id,
+                    "ONE",
+                    "tip"
                 );
             }
-            await saveLog(
-                sendUserName,
-                toUserName,
-                amount,
-                item.id,
-                "ONE",
-                "tip"
-            );
+        } else {
+            logger.debug("comment not valid command");
         }
-    } else {
-        logger.debug("comment not valid command");
+    } catch (error){
+        logger.error("process comment error " + JSON.stringify(error) + " " + error);
     }
+    
 }
 
 try {
