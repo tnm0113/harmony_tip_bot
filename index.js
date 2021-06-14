@@ -40,7 +40,6 @@ async function tip(fromUser, toUserName, amount) {
     );
     try {
         const toUser = await findOrCreate(toUserName);
-        // const fromUserMn = fromUser.mnemonic;
         const addressTo = toUser.oneAddress;
         const fromUserAddress = fromUser.ethAddress;
         const hash = await transfer(fromUserAddress, addressTo, amount);
@@ -118,6 +117,7 @@ async function processMention(item) {
     );
     let c = client.getComment(item.parent_id);
     let splitCms = item.body
+        .toLowerCase()
         .replace("\n", " ")
         .replace("\\", " ")
         .split(" ");
@@ -144,6 +144,18 @@ async function processMention(item) {
                 const author = await c.author;
                 toUser = author.name;
                 logger.info("tip from comment to user " + toUser + " amount " + amount);
+            }
+            if (currency.toLowerCase() != "one"){
+                item.reply("Tip bot only support ONE currently !!!");
+                await saveLog(
+                    item.author.name,
+                    toUser,
+                    amount,
+                    item.id,
+                    currency,
+                    "tip"
+                );
+                return;
             }
             const sendUser = await findUser(item.author.name);
             if (sendUser) {
@@ -198,33 +210,49 @@ async function processSendRequest(item) {
             const amount = splitBody[1];
             const currency = splitBody[2];
             const toUser = splitBody[3];
-            const fromUser = await findUser(item.author.name);
-            if (fromUser) {
-                const txnHash = await tip(fromUser, toUser, amount);
-                if (txnHash) {
-                    const txLink =
-                        "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                    await client.composeMessage({
-                        to: item.author.name,
-                        subject: "Send result",
-                        text:
-                            "You have tipped successfully, here is the tx link for that transaction " +
-                            txLink,
-                    });
+            const fromUser = await findUser(item.author.name.toLowerCase());
+            if (currency.toLowerCase() != "one"){
+                await client.composeMessage({
+                    to: item.author.name,
+                    subject: "Send result",
+                    text:"Tip bot only support ONE currently !!"
+                });
+            } else {
+                if (fromUser) {
+                    const txnHash = await tip(fromUser, toUser, amount);
+                    if (txnHash) {
+                        const txLink =
+                            "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                        await client.composeMessage({
+                            to: item.author.name,
+                            subject: "Send result",
+                            text:
+                                "You have tipped successfully, here is the tx link for that transaction " +
+                                txLink,
+                        });
+                    } else {
+                        await client.composeMessage({
+                            to: item.author.name,
+                            subject: "Send result:",
+                            text: "Failed to tip, please check your comment, balance and try again",
+                        });
+                    }
                 } else {
                     await client.composeMessage({
                         to: item.author.name,
                         subject: "Send result:",
-                        text: "Failed to tip, please check your comment, balance and try again",
+                        text: `Your account doesnt exist, please send "create" or "register" to create account`,
                     });
                 }
-            } else {
-                await client.composeMessage({
-                    to: item.author.name,
-                    subject: "Send result:",
-                    text: `Your account doesnt exist, please send "create" or "register" to create account`,
-                });
             }
+            await saveLog(
+                item.author.name.toLowerCase(),
+                toUser,
+                amount,
+                item.id,
+                currency,
+                "send"
+            );
         } catch (error) {
             logger.error("process send request error " + JSON.stringify(error));
         }
@@ -232,7 +260,7 @@ async function processSendRequest(item) {
 }
 
 async function processInfoRequest(item) {
-    const info = await getBalance(item.author.name);
+    const info = await getBalance(item.author.name.toLowerCase());
     if (info) {
         const text =
             `One Address:  ` +
@@ -263,23 +291,36 @@ async function processWithdrawRequest(item) {
         const amount = splitBody[1];
         const currency = splitBody[2];
         const addressTo = splitBody[3];
-        const fromUser = item.author.name;
-        const user = await findUserByUsername(item.author.name);
-        const fromUserMn = user.mnemonic;
-        await transfer(fromUserMn, addressTo, amount, user.ethAddress);
+        const user = await findUserByUsername(item.author.name.toLowerCase());
+        const fromUserAddress = user.ethAddress;
+        if (currency != "one"){
+            await client.composeMessage({
+                to: item.author.name,
+                subject: "Widthdraw result",
+                text:"Tip bot only support ONE currently !!"
+            });
+        } else {
+            const txnHash = await transfer(fromUserAddress, addressTo, amount);
+            const txLink = "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+            await client.composeMessage({
+                to: item.author.name,
+                subject: "Widthdraw result",
+                text: "You have withdrawn successfully, here is the tx link for that transaction " + txLink
+            });
+        }
         await saveLog(
-            item.author.name,
+            item.author.name.toLowerCase(),
             addressTo,
             amount,
             item.id,
             currency,
-            "send"
+            "withdraw"
         );
     }
 }
 
 async function processCreateRequest(item) {
-    const user = await findOrCreate(item.author.name);
+    const user = await findOrCreate(item.author.name.toLowerCase());
     if (user) {
         const text =
             `One Address:  ` +
@@ -302,6 +343,7 @@ async function processComment(item){
             item.body
     );
     let splitCms = item.body
+        .toLowerCase()
         .replace("\n", " ")
         .replace("\\", " ")
         .split(" ");
@@ -311,14 +353,14 @@ async function processComment(item){
         if (log){
             logger.info("comment already processed");
         } else {
-            const sendUserName = item.author.name;
+            const sendUserName = item.author.name.toLowerCase();
             let amount = splitCms[1];
             let toUserName = "";
             const sendUser = await findUser(sendUserName);
             if (sendUser){
                 if (splitCms.length === 2){
                     const parentComment = client.getComment(item.parent_id);
-                    toUserName = await (await parentComment).author.name;
+                    toUserName = await parentComment.author.name.toLowerCase();
                 } else if (splitCms.length === 3){
                     toUserName = splitCms[2].replace("/u/","").replace("u/","");
                 }
