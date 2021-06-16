@@ -122,8 +122,12 @@ async function processMention(item) {
         .replace("\\", " ")
         .split(" ");
     logger.debug("split cms " + splitCms);
+    if (splitCms[0] === botConfig.command){
+        processComment(item);
+        return;
+    }
     if (splitCms.length > 3) {
-        if (splitCms[1].toLowerCase() === "tip") {
+        if (splitCms[1] === "tip") {
             let amount = -1;
             let currency = "";
             let toUser = "";
@@ -291,7 +295,7 @@ async function processWithdrawRequest(item) {
         const amount = splitBody[1];
         const currency = splitBody[2];
         const addressTo = splitBody[3];
-        const user = await findUserByUsername(item.author.name.toLowerCase());
+        const user = await findUser(item.author.name.toLowerCase());
         const fromUserAddress = user.ethAddress;
         if (currency != "one"){
             await client.composeMessage({
@@ -359,12 +363,13 @@ async function processComment(item){
                 let toUserName = "";
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
-                    if (splitCms.length === 2){
-                        const parentComment = client.getComment(item.parent_id);
-                        toUserName = await parentComment.author.name;
-                        toUserName = toUserName.toLowerCase();
-                    } else if (splitCms.length === 3){
-                        toUserName = splitCms[2].replace("/u/","").replace("u/","");
+                    const parentComment = client.getComment(item.parent_id);
+                    toUserName = await parentComment.author.name;
+                    toUserName = toUserName.toLowerCase();
+                    if (splitCms.length > 2){
+                        if (splitCms[2].match(regexUser)){
+                            toUserName = splitCms[2].replace("/u/","").replace("u/","");
+                        }
                     }
                     const txnHash = await tip(sendUser, toUserName, amount);
                     if (txnHash) {
