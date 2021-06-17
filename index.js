@@ -376,8 +376,7 @@ async function processComment(item){
                         const txLink =
                             "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
                         item.reply(
-                            "You have tipped successfully, here is the tx link for that transaction " +
-                                txLink
+                            `Your tip was successfully! Transaction ID below [tx] (${txLink})` 
                         );
                     } else {
                         logger.error("tip failed");
