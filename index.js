@@ -9,6 +9,7 @@ import {
     createAccount,
     addAllAccounts
 } from "./harmony.js";
+import * as TEXT from "./text.js";
 
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
@@ -138,9 +139,10 @@ async function processMention(item) {
                     currency = splitCms[4];
                     logger.debug("send from comment to user " + toUser +  " amount " + amount);
                 } else {
-                    item.reply(
-                        "Failed to tip, please check your comment, balance and try again"
-                    );
+                    // item.reply(
+                    //     "Failed to tip, please check your comment, balance and try again"
+                    // );
+                    item.reply(TEXT.TIP_FAILED(botConfig.name));
                 }
             } else {
                 amount = splitCms[2];
@@ -167,20 +169,23 @@ async function processMention(item) {
                 if (txnHash) {
                     const txLink =
                         "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                    item.reply(
-                        "You have tipped successfully, here is the tx link for that transaction " +
-                            txLink
-                    );
+                    // item.reply(
+                    //     "You have tipped successfully, here is the tx link for that transaction " +
+                    //         txLink
+                    // );
+                    item.reply(TEXT.TIP_SUCCESS(txLink));
                 } else {
                     logger.error("tip failed");
-                    item.reply(
-                        "Failed to tip, please check your comment, balance and try again"
-                    );
+                    // item.reply(
+                    //     "Failed to tip, please check your comment, balance and try again"
+                    // );
+                    item.reply(TEXT.TIP_FAILED);
                 }
             } else {
-                item.reply(
-                    `Your account doesnt exist, please send "create" or "register" to create account`
-                );
+                // item.reply(
+                //     `Your account doesnt exist, please send "create" or "register" to create account`
+                // );
+                item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
             }
             await saveLog(
                 item.author.name,
@@ -230,22 +235,20 @@ async function processSendRequest(item) {
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result",
-                            text:
-                                "You have tipped successfully, here is the tx link for that transaction " +
-                                txLink,
+                            text: TEXT.TIP_SUCCESS(txLink)
                         });
                     } else {
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result:",
-                            text: "Failed to tip, please check your comment, balance and try again",
+                            text: TEXT.TIP_FAILED(botConfig.name)
                         });
                     }
                 } else {
                     await client.composeMessage({
                         to: item.author.name,
                         subject: "Send result:",
-                        text: `Your account doesnt exist, please send "create" or "register" to create account`,
+                        text: TEXT.ACCOUNT_NOT_EXISTED(botConfig.name)
                     });
                 }
             }
@@ -266,20 +269,22 @@ async function processSendRequest(item) {
 async function processInfoRequest(item) {
     const info = await getBalance(item.author.name.toLowerCase());
     if (info) {
-        const text =
-            `One Address:  ` +
-            info.oneAddress +
-            `\n \n ` +
-            `Eth Address: ` +
-            info.ethAddress +
-            `\n \n` +
-            `Balance:  ` +
-            info.balance +
-            ` ONE`;
+        // const text =
+        //     `One Address:  ` +
+        //     info.oneAddress +
+        //     `\n \n ` +
+        //     `Eth Address: ` +
+        //     info.ethAddress +
+        //     `\n \n` +
+        //     `Balance:  ` +
+        //     info.balance +
+        //     ` ONE`;
+        const text = TEXT.INFO_REPLY(info.oneAddress, info.ethAddress, info.balance);
         const subject = "Your account info:";
         sendMessage(item.author.name, subject, text);
     } else {
-        const text = `Your account doesnt exist, please send "create" or "register" to create account`;
+        // const text = `Your account doesnt exist, please send "create" or "register" to create account`;
+        const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
         const subject = "Help message";
         sendMessage(item.author.name, subject, text);
     }
@@ -309,7 +314,7 @@ async function processWithdrawRequest(item) {
             await client.composeMessage({
                 to: item.author.name,
                 subject: "Widthdraw result",
-                text: "You have withdrawn successfully, here is the tx link for that transaction " + txLink
+                text: TEXT.WITHDRAW_SUCCESS(txLink)
             });
         }
         await saveLog(
@@ -375,19 +380,22 @@ async function processComment(item){
                     if (txnHash) {
                         const txLink =
                             "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
-                        item.reply(
-                            `Your tip was successfully! Transaction ID below [tx] (${txLink})` 
-                        );
+                        // item.reply(
+                        //     `Your tip was successfully! Transaction ID below [tx] (${txLink})` 
+                        // );
+                        item.reply(TEXT.TIP_SUCCESS(txLink));
                     } else {
                         logger.error("tip failed");
-                        item.reply(
-                            "Failed to tip, please check your comment, balance and try again"
-                        );
+                        // item.reply(
+                        //     "Failed to tip, please check your comment, balance and try again"
+                        // );
+                        item.reply(TEXT.TIP_FAILED(botConfig.name));
                     }
                 } else {
-                    item.reply(
-                        `Your account doesnt exist, please send "create" or "register" to create account`
-                    );
+                    // item.reply(
+                    //     `Your account doesnt exist, please send "create" or "register" to create account`
+                    // );
+                    item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
                 }
                 await saveLog(
                     sendUserName,
