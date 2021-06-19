@@ -198,14 +198,16 @@ async function processMention(item) {
             );
         } else {
             logger.debug("other case");
-            item.reply(
-                "Invalid command, send Private Message with help in the body to me to get help, tks !"
-            );
+            // item.reply(
+            //     "Invalid command, send Private Message with help in the body to me to get help, tks !"
+            // );
+            item.reply(TEXT.INVALID_COMMAND(botConfig.name));
         }
     } else {
-        item.reply(
-            "Invalid command, send Private Message with help in the body to me to get help, tks !"
-        );
+        // item.reply(
+        //     "Invalid command, send Private Message with help in the body to me to get help, tks !"
+        // );
+        item.reply(TEXT.INVALID_COMMAND(botConfig.name));
     }
 }
 

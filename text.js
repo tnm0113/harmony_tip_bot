@@ -1,3 +1,7 @@
+const linkPmReddit = (bot_name, subject, action) => {
+    return `https://www.reddit.com/message/compose/?to=${bot_name}&subject=${subject}&message=${action})`;
+}
+
 // No Account:    
 export const NO_ACCOUNT = "Your account does not exist. Please reply with the word CREATE or REGISTER to have the tip bot create your ONE address."  
       
@@ -46,6 +50,12 @@ export const WITHDRAW_SUCCESS = (txlink) => {
 export const WITHDRAW_FAILED = `Your withdraw was not successful. Please check your command and ensure the address is correct. Be sure you have enough funds and small amount for the transaction fee.`
 
 export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
-    const linkPm = ""
+    const linkPm = linkPmReddit(tip_bot_name, "Create Account", "create");
     return `Your account doesnt exist, please send "CREATE" or "REGISTER" in private message or click [here] (${linkPm})`;
 }
+
+export const INVALID_COMMAND = (tip_bot_name) => {
+    const linkPm = linkPmReddit(tip_bot_name, "Get Help", "help");
+    return `Invalid command, please send "HELP" in private message or click [here] (${linkPm})`
+}
+
