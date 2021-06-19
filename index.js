@@ -17,6 +17,8 @@ const regexUser = /\/?u\/(.)*/g;
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 
+const explorerLink = botConfig.mainet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
+
 const client = new Snoowrap(snoowrapConfig);
 client.config({
     requestDelay: 1000,
@@ -167,8 +169,7 @@ async function processMention(item) {
             if (sendUser) {
                 const txnHash = await tip(sendUser, toUser, amount);
                 if (txnHash) {
-                    const txLink =
-                        "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                    const txLink = explorerLink + txnHash;
                     // item.reply(
                     //     "You have tipped successfully, here is the tx link for that transaction " +
                     //         txLink
@@ -230,8 +231,7 @@ async function processSendRequest(item) {
                 if (fromUser) {
                     const txnHash = await tip(fromUser, toUser, amount);
                     if (txnHash) {
-                        const txLink =
-                            "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                        const txLink = explorerLink + txnHash;
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result",
@@ -310,7 +310,7 @@ async function processWithdrawRequest(item) {
             });
         } else {
             const txnHash = await transfer(fromUserAddress, addressTo, amount);
-            const txLink = "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+            const txLink = explorerLink + txnHash;
             await client.composeMessage({
                 to: item.author.name,
                 subject: "Widthdraw result",
@@ -378,8 +378,7 @@ async function processComment(item){
                     }
                     const txnHash = await tip(sendUser, toUserName, amount);
                     if (txnHash) {
-                        const txLink =
-                            "https://explorer.testnet.harmony.one/#/tx/" + txnHash;
+                        const txLink = explorerLink + txnHash;
                         // item.reply(
                         //     `Your tip was successfully! Transaction ID below [tx] (${txLink})` 
                         // );

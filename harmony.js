@@ -3,10 +3,16 @@ import { Harmony } from "@harmony-js/core";
 import { logger } from "./logger.js";
 import { Wallet } from "@harmony-js/account";
 import { getAllUser } from "./db.js";
+import config from "config";
 
-const hmy = new Harmony("https://api.s0.b.hmny.io/", {
+const botConfig = config.get("bot");
+
+const blockChainUrl = botConfig.mainet ? "https://api.s0.t.hmny.io/" : "https://api.s0.b.hmny.io/";
+const chainId = botConfig.mainet ? ChainID.HmyMainnet : ChainID.HmyTestnet;
+
+const hmy = new Harmony(blockChainUrl, {
     chainType: ChainType.Harmony,
-    chainId: ChainID.HmyTestnet,
+    chainId: chainId,
 });
 
 async function addAllAccounts(){
