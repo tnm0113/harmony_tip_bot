@@ -174,7 +174,7 @@ async function processMention(item) {
                     //     "You have tipped successfully, here is the tx link for that transaction " +
                     //         txLink
                     // );
-                    item.reply(TEXT.TIP_SUCCESS(txLink));
+                    item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
                 } else {
                     logger.error("tip failed");
                     // item.reply(
@@ -237,7 +237,7 @@ async function processSendRequest(item) {
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result",
-                            text: TEXT.TIP_SUCCESS(txLink)
+                            text: TEXT.TIP_SUCCESS(amount, toUser, txLink)
                         });
                     } else {
                         await client.composeMessage({
@@ -283,6 +283,20 @@ async function processInfoRequest(item) {
         //     ` ONE`;
         const text = TEXT.INFO_REPLY(info.oneAddress, info.ethAddress, info.balance);
         const subject = "Your account info:";
+        sendMessage(item.author.name, subject, text);
+    } else {
+        // const text = `Your account doesnt exist, please send "create" or "register" to create account`;
+        const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
+        const subject = "Help message";
+        sendMessage(item.author.name, subject, text);
+    }
+}
+
+async function processPrivateRequest(item){
+    const user = await findUser(item.author.name.toLowerCase());
+    if (user) {
+        const text = TEXT.PRIVATE_INFO(user.mnemonic);
+        const subject = "Your private info:";
         sendMessage(item.author.name, subject, text);
     } else {
         // const text = `Your account doesnt exist, please send "create" or "register" to create account`;
@@ -384,7 +398,7 @@ async function processComment(item){
                         // item.reply(
                         //     `Your tip was successfully! Transaction ID below [tx] (${txLink})` 
                         // );
-                        item.reply(TEXT.TIP_SUCCESS(txLink));
+                        item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink));
                     } else {
                         logger.error("tip failed");
                         // item.reply(
@@ -468,6 +482,8 @@ try {
                             processInfoRequest(item);
                         } else if (item.body.toLowerCase().match(regexWithdraw)) {
                             processWithdrawRequest(item);
+                        } else if (item.body.toLowerCase() === "private") {
+                            processPrivateRequest(item);
                         }
                         await item.markAsRead();
                     }

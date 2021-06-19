@@ -15,8 +15,8 @@ export const ACCOUNT_CREATED = (info) => {
       
 //Succssful Tip Reply:    
 const tip_success = `Your tip was successful! Transaction ID below. <transactionID>`  
-export const TIP_SUCCESS = (txLink) => {
-    return `Your tip was successful! Transaction ID [here] (${txLink})`
+export const TIP_SUCCESS = (amount, receiveUser, txLink) => {
+    return `Your have tip ${amount} ONE to /u/${receiveUser} ! Transaction ID [here](${txLink})`
 }
       
 //Failed Tip Reply:    
@@ -26,7 +26,7 @@ export const TIP_FAILED = (tip_bot_name) => {
     const link = ""
     return `Your tip was not successful. Please review your command and retry.` + 
         `Ensure you have a small amount of ONE for gas. For more information, send me the word INFO in private message` + 
-        `by clicking [HERE] (${link}).`
+        `by clicking [HERE](${link}).`
 }
       
 //Info Reply:    
@@ -43,7 +43,7 @@ export const INFO_REPLY = (one, eth, balance) => {
 //Withdraw Reply:    
 const withdraw_reply = `Your withdraw was successful! Transaction ID below.`  
 export const WITHDRAW_SUCCESS = (txlink) => {
-    return `Your withdraw was successful! Transaction ID [here] (${txLink}).`
+    return `Your withdraw was successful! Transaction ID [here](${txLink}).`
 }
 
 //Withdraw Failure:
@@ -51,11 +51,14 @@ export const WITHDRAW_FAILED = `Your withdraw was not successful. Please check y
 
 export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Create Account", "create");
-    return `Your account doesnt exist, please send "CREATE" or "REGISTER" in private message or click [here] (${linkPm})`;
+    return `Your account doesnt exist, please send "CREATE" or "REGISTER" in private message or click [here](${linkPm})`;
 }
 
 export const INVALID_COMMAND = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Get Help", "help");
-    return `Invalid command, please send "HELP" in private message or click [here] (${linkPm})`
+    return `Invalid command, please send "HELP" in private message or click [here](${linkPm})`
 }
 
+export const PRIVATE_INFO = (mnemonic) => {
+    return `Here is your mnemonic, keep it safe \n\n ${mnemonic}`
+}
