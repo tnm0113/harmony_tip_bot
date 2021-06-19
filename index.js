@@ -99,6 +99,7 @@ async function returnHelp(username) {
         `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
         `- 'send <amount> <currency> <user>' - Send ONE to a reddit user.\n\n` +
         `- 'withdraw <amount> <currency> <address>' - Withdraw ONE to an address.\n\n` +
+        `- 'private ' - Get mnemonic seeds.\n\n` +
         `- 'help' - Get this help message.`;
     try {
         await client.composeMessage({
