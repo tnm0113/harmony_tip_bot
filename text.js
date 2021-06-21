@@ -10,7 +10,7 @@ const account_created = `Your account has been created. Address and balance are 
 <addr & balance information>`  
 
 export const ACCOUNT_CREATED = (info) => {
-    return `Your account has been created. Address and balance are below.\n ${info}`
+    return `Your account has been created. Address and balance are below.\n ${info}.`
 }
       
 //Succssful Tip Reply:    
