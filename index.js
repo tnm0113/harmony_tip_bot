@@ -95,10 +95,11 @@ async function findOrCreate(username) {
 
 async function returnHelp(username) {
     const helpText =
+        `Commands supported via Private Message: \n\n` +
         `- 'info' - Retrieve your account info.\n\n` +
         `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
-        `- 'send <amount> <currency> <user>' - Send ONE to a reddit user.\n\n` +
-        `- 'withdraw <amount> <currency> <address>' - Withdraw ONE to an address.\n\n` +
+        `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
+        `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
         `- 'private ' - Get mnemonic seeds.\n\n` +
         `- 'help' - Get this help message.`;
     try {
@@ -142,9 +143,6 @@ async function processMention(item) {
                     currency = splitCms[4];
                     logger.debug("send from comment to user " + toUser +  " amount " + amount);
                 } else {
-                    // item.reply(
-                    //     "Failed to tip, please check your comment, balance and try again"
-                    // );
                     item.reply(TEXT.TIP_FAILED(botConfig.name));
                 }
             } else {
@@ -171,22 +169,12 @@ async function processMention(item) {
                 const txnHash = await tip(sendUser, toUser, amount);
                 if (txnHash) {
                     const txLink = explorerLink + txnHash;
-                    // item.reply(
-                    //     "You have tipped successfully, here is the tx link for that transaction " +
-                    //         txLink
-                    // );
                     item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
                 } else {
                     logger.error("tip failed");
-                    // item.reply(
-                    //     "Failed to tip, please check your comment, balance and try again"
-                    // );
                     item.reply(TEXT.TIP_FAILED);
                 }
             } else {
-                // item.reply(
-                //     `Your account doesnt exist, please send "create" or "register" to create account`
-                // );
                 item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
             }
             await saveLog(
@@ -199,15 +187,9 @@ async function processMention(item) {
             );
         } else {
             logger.debug("other case");
-            // item.reply(
-            //     "Invalid command, send Private Message with help in the body to me to get help, tks !"
-            // );
             item.reply(TEXT.INVALID_COMMAND(botConfig.name));
         }
     } else {
-        // item.reply(
-        //     "Invalid command, send Private Message with help in the body to me to get help, tks !"
-        // );
         item.reply(TEXT.INVALID_COMMAND(botConfig.name));
     }
 }
@@ -272,21 +254,10 @@ async function processSendRequest(item) {
 async function processInfoRequest(item) {
     const info = await getBalance(item.author.name.toLowerCase());
     if (info) {
-        // const text =
-        //     `One Address:  ` +
-        //     info.oneAddress +
-        //     `\n \n ` +
-        //     `Eth Address: ` +
-        //     info.ethAddress +
-        //     `\n \n` +
-        //     `Balance:  ` +
-        //     info.balance +
-        //     ` ONE`;
         const text = TEXT.INFO_REPLY(info.oneAddress, info.ethAddress, info.balance);
         const subject = "Your account info:";
         sendMessage(item.author.name, subject, text);
     } else {
-        // const text = `Your account doesnt exist, please send "create" or "register" to create account`;
         const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
         const subject = "Help message";
         sendMessage(item.author.name, subject, text);
@@ -300,7 +271,6 @@ async function processPrivateRequest(item){
         const subject = "Your private info:";
         sendMessage(item.author.name, subject, text);
     } else {
-        // const text = `Your account doesnt exist, please send "create" or "register" to create account`;
         const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
         const subject = "Help message";
         sendMessage(item.author.name, subject, text);
@@ -396,21 +366,12 @@ async function processComment(item){
                     const txnHash = await tip(sendUser, toUserName, amount);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
-                        // item.reply(
-                        //     `Your tip was successfully! Transaction ID below [tx] (${txLink})` 
-                        // );
                         item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink));
                     } else {
                         logger.error("tip failed");
-                        // item.reply(
-                        //     "Failed to tip, please check your comment, balance and try again"
-                        // );
                         item.reply(TEXT.TIP_FAILED(botConfig.name));
                     }
                 } else {
-                    // item.reply(
-                    //     `Your account doesnt exist, please send "create" or "register" to create account`
-                    // );
                     item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
                 }
                 await saveLog(

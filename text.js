@@ -25,7 +25,7 @@ const tip_failed = `Your tip was unsuccessful. Please review your command and re
 export const TIP_FAILED = (tip_bot_name) => {
     const link = linkPmReddit(tip_bot_name, "My Info", "info");
     return `Your tip was not successful. Please review your command and retry. ` + 
-        `Ensure your balane covers the transaction and gas. For more information, send the word INFO in private message ` + 
+        `Ensure your balance covers the transaction and gas. For more information, send the word INFO in private message ` + 
         `by clicking [HERE](${link}).`
 }
       
