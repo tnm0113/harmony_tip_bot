@@ -1,5 +1,5 @@
 const linkPmReddit = (bot_name, subject, action) => {
-    return `https://www.reddit.com/message/compose/?to=${bot_name}&subject=${subject}&message=${action})`;
+    return `https://www.reddit.com/message/compose/?to=${bot_name}&subject=${subject}&message=${action}`;
 }
 
 // No Account:    
@@ -16,7 +16,7 @@ export const ACCOUNT_CREATED = (info) => {
 //Succssful Tip Reply:    
 const tip_success = `Your tip was successful! Transaction ID below. <transactionID>`  
 export const TIP_SUCCESS = (amount, receiveUser, txLink) => {
-    return `Your tip of ${amount} ONE was successful to /u/${receiveUser}! Transaction ID [HERE](${txLink})`
+    return `Your tip of ${amount} ONE was successful to /u/${receiveUser}! Transaction ID [HERE](${txLink}).`
 }
       
 //Failed Tip Reply:    
@@ -60,5 +60,5 @@ export const INVALID_COMMAND = (tip_bot_name) => {
 }
 
 export const PRIVATE_INFO = (mnemonic) => {
-    return `Here is your mnemonic, keep it safe \n\n ${mnemonic}`
+    return `Here is your mnemonic, keep it safe \n\n ${mnemonic}.`
 }
