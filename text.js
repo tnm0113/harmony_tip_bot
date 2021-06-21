@@ -23,7 +23,7 @@ export const TIP_SUCCESS = (amount, receiveUser, txLink) => {
 const tip_failed = `Your tip was unsuccessful. Please review your command and retry. Ensure you have a small amount of ONE for gas. For more information, send me the word INFO in private message by clicking HERE.
 (make "HERE" a hyperlink to PM the bot)`
 export const TIP_FAILED = (tip_bot_name) => {
-    const link = ""
+    const link = linkPmReddit(tip_bot_name, "My Info", "info");
     return `Your tip was not successful. Please review your command and retry. ` + 
         `Ensure your balane covers the transaction and gas. For more information, send the word INFO in private message ` + 
         `by clicking [HERE](${link}).`
@@ -43,7 +43,7 @@ export const INFO_REPLY = (one, eth, balance) => {
 //Withdraw Reply:    
 const withdraw_reply = `Your withdraw was successful! Transaction ID below.`  
 export const WITHDRAW_SUCCESS = (txlink) => {
-    return `Your withdraw was successful! Transaction ID [here](${txlink}).`
+    return `Your withdraw was successful! Transaction ID [HERE](${txlink}).`
 }
 
 //Withdraw Failure:
@@ -51,12 +51,12 @@ export const WITHDRAW_FAILED = `Your withdraw was not successful. Please check y
 
 export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Create Account", "create");
-    return `Your account doesnt exist, please send "CREATE" or "REGISTER" in private message or click [here](${linkPm})`;
+    return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message or click [HERE](${linkPm})`;
 }
 
 export const INVALID_COMMAND = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Get Help", "help");
-    return `Invalid command, please send "HELP" in private message or click [here](${linkPm})`
+    return `Invalid command, please send "HELP" in private message or click [HERE](${linkPm})`
 }
 
 export const PRIVATE_INFO = (mnemonic) => {
