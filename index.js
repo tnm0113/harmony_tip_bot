@@ -128,7 +128,8 @@ async function processMention(item) {
         .split(" ");
     logger.debug("split cms " + splitCms);
     if (splitCms[0] === botConfig.command){
-        processComment(item);
+        // processComment(item);
+        logger.debug("process in comment section");
         return;
     }
     if (splitCms.length > 3) {
