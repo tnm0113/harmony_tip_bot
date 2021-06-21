@@ -60,5 +60,5 @@ export const INVALID_COMMAND = (tip_bot_name) => {
 }
 
 export const PRIVATE_INFO = (mnemonic) => {
-    return `Here is your mnemonic, keep it safe \n\n ${mnemonic}.`
+    return `Here is your mnemonic. Please keep it safe: \n\n ${mnemonic}.`
 }
