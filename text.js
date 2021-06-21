@@ -43,7 +43,7 @@ export const INFO_REPLY = (one, eth, balance) => {
 //Withdraw Reply:    
 const withdraw_reply = `Your withdraw was successful! Transaction ID below.`  
 export const WITHDRAW_SUCCESS = (txlink) => {
-    return `Your withdraw was successful! Transaction ID [here](${txLink}).`
+    return `Your withdraw was successful! Transaction ID [here](${txlink}).`
 }
 
 //Withdraw Failure:
