@@ -16,7 +16,7 @@ export const ACCOUNT_CREATED = (info) => {
 //Succssful Tip Reply:    
 const tip_success = `Your tip was successful! Transaction ID below. <transactionID>`  
 export const TIP_SUCCESS = (amount, receiveUser, txLink) => {
-    return `Your tip of ${amount} ONE was successful to /u/${receiveUser}! Transaction ID [here](${txLink})`
+    return `Your tip of ${amount} ONE was successful to /u/${receiveUser}! Transaction ID [HERE](${txLink})`
 }
       
 //Failed Tip Reply:    
