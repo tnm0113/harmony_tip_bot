@@ -16,16 +16,16 @@ export const ACCOUNT_CREATED = (info) => {
 //Succssful Tip Reply:    
 const tip_success = `Your tip was successful! Transaction ID below. <transactionID>`  
 export const TIP_SUCCESS = (amount, receiveUser, txLink) => {
-    return `Your have tip ${amount} ONE to /u/${receiveUser} ! Transaction ID [here](${txLink})`
+    return `Your have of ${amount} ONE was successful to /u/${receiveUser} ! Transaction ID [here](${txLink})`
 }
       
 //Failed Tip Reply:    
-const tip_failed = `Your tip was not successful. Please review your command and retry. Ensure you have a small amount of ONE for gas. For more information, send me the word INFO in private message by clicking HERE.
+const tip_failed = `Your tip was unsuccessful. Please review your command and retry. Ensure you have a small amount of ONE for gas. For more information, send me the word INFO in private message by clicking HERE.
 (make "HERE" a hyperlink to PM the bot)`
 export const TIP_FAILED = (tip_bot_name) => {
     const link = ""
-    return `Your tip was not successful. Please review your command and retry.` + 
-        `Ensure you have a small amount of ONE for gas. For more information, send me the word INFO in private message` + 
+    return `Your tip was not successful. Please review your command and retry. ` + 
+        `Ensure your balane covers the transaction and gas. For more information, send the word INFO in private message ` + 
         `by clicking [HERE](${link}).`
 }
       
