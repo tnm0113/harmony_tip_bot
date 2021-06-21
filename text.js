@@ -51,12 +51,12 @@ export const WITHDRAW_FAILED = `Your withdraw was not successful. Please check y
 
 export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Create Account", "create");
-    return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message or click [HERE](${linkPm})`;
+    return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message to the tip bot by clicking [HERE](${linkPm}).`;
 }
 
 export const INVALID_COMMAND = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Get Help", "help");
-    return `Invalid command, please send "HELP" in private message or click [HERE](${linkPm})`
+    return `Invalid command, please send "HELP" in private message to the tip bot by clicking [HERE](${linkPm}).`
 }
 
 export const PRIVATE_INFO = (mnemonic) => {
