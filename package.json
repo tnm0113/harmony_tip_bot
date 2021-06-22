@@ -25,6 +25,8 @@
     "@harmony-js/network": "^0.1.56",
     "@harmony-js/transaction": "^0.1.56",
     "@harmony-js/utils": "^0.1.56",
+    "bignumber.js": "^9.0.1",
+    "bn.js": "^5.2.0",
     "config": "^3.3.6",
     "ethers": "^5.3.0",
     "pino": "^6.11.3",
