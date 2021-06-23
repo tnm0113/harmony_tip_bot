@@ -7,8 +7,8 @@ import config from "config";
 
 const botConfig = config.get("bot");
 
-const blockChainUrl = botConfig.mainet ? "https://api.s0.t.hmny.io/" : "https://api.s0.b.hmny.io/";
-const chainId = botConfig.mainet ? ChainID.HmyMainnet : ChainID.HmyTestnet;
+const blockChainUrl = botConfig.mainnet ? "https://api.s0.t.hmny.io/" : "https://api.s0.b.hmny.io/";
+const chainId = botConfig.mainnet ? ChainID.HmyMainnet : ChainID.HmyTestnet;
 
 const hmy = new Harmony(blockChainUrl, {
     chainType: ChainType.Harmony,

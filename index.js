@@ -17,7 +17,7 @@ const regexUser = /\/?u\/(.)*/g;
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 
-const explorerLink = botConfig.mainet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
+const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
@@ -84,7 +84,6 @@ async function findOrCreate(username) {
                 username,
                 blockchainInfo.ethAddress,
                 blockchainInfo.oneAddress,
-                0,
                 blockchainInfo.mnemonic
             );
         }
@@ -101,7 +100,7 @@ async function returnHelp(username) {
         `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
         `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
         `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
-        `- 'private ' - Get mnemonic seeds.\n\n` +
+        `- 'private ' - Get wallet recovery phrase.\n\n` +
         `- 'help' - Get this help message.`;
     try {
         await client.composeMessage({
