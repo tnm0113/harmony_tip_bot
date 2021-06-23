@@ -1,3 +1,6 @@
+import config from "config";
+const botConfig = config.get("bot");
+
 const linkPmReddit = (bot_name, subject, action) => {
     return `https://www.reddit.com/message/compose/?to=${bot_name}&subject=${subject}&message=${action}`;
 }
@@ -16,7 +19,7 @@ export const ACCOUNT_CREATED = (info) => {
 //Succssful Tip Reply:    
 const tip_success = `Your tip was successful! Transaction ID below. <transactionID>`  
 export const TIP_SUCCESS = (amount, receiveUser, txLink) => {
-    return `Your tip of ${amount} ONE was successful to /u/${receiveUser}! Transaction ID [HERE](${txLink}).`
+    return `Your tip of ${amount} ONE was successful to /u/${receiveUser}! Transaction ID [HERE](${txLink}).${SIGNATURE(botConfig.name)}`
 }
       
 //Failed Tip Reply:    
@@ -65,9 +68,9 @@ export const PRIVATE_INFO = (mnemonic) => {
 
 export const SIGNATURE = (tip_bot_name) => {
     const base = "\n\n*****\n\n";
-    const emojii = "^\(っ◔◡◔)っ ^♡";
-    const get_started = `^| [^(Get Started)](https://reddit.com/r/${tip_bot_name}/wiki/index)`;
-    const show_balance = `^| [^(Show my balance)](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
-    const end = " ^| ^♡";
+    const emojii = "(っ◔◡◔)っ ♡";
+    const get_started = `| [(Get Started)](https://reddit.com/r/${tip_bot_name}/wiki/index)`;
+    const show_balance = `| [(Show my balance)](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
+    const end = " | ♡";
     return base + emojii + get_started +  show_balance + end;
 }
