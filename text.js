@@ -4,9 +4,6 @@ const botConfig = config.get("bot");
 const linkPmReddit = (bot_name, subject, action) => {
     return `https://www.reddit.com/message/compose/?to=${bot_name}&subject=${subject}&message=${action}`;
 }
-
-// No Account:    
-export const NO_ACCOUNT = `Your account does not exist. Please reply with the word CREATE or REGISTER to have the tip bot create your ONE address.${SIGNATURE(botConfig.name)}`  
       
 //Account Created:    
 const account_created = `Your account has been created. Address and balance are below.  
