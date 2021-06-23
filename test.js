@@ -73,6 +73,10 @@ const hmy = new Harmony("https://api.s0.t.hmny.io/", {
 //     });
 //   });
 // });
+
+
+//oswap contract address testnet: 0x759c7F96fD1F98Ab28b6f09b3282f0cC62c9A3Cc
+
 import {abi} from "./artifacts.js";
 import BN from "bn.js";
 import BigNumber from "bignumber.js";
