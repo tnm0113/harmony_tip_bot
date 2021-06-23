@@ -21,9 +21,10 @@ const explorerLink = botConfig.mainet ? "https://explorer.harmony.one/#/tx/" : "
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
-    requestDelay: 1000,
+    requestDelay: 0,
     continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
+    debug: true,
     logger: logger,
 });
 
@@ -398,7 +399,7 @@ try {
 
     const inbox = new InboxStream(client, {
         filter: "mentions" | "messages",
-        limit: 0,
+        limit: 10,
         pollTime: 2000,
     });
 
