@@ -101,7 +101,8 @@ async function returnHelp(username) {
         `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
         `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
         `- 'private ' - Get wallet recovery phrase.\n\n` +
-        `- 'help' - Get this help message.`;
+        `- 'help' - Get this help message.`+
+        `${TEXT.SIGNATURE(botConfig.name)}`;
     try {
         await client.composeMessage({
             to: username,
