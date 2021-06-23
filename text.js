@@ -6,14 +6,14 @@ const linkPmReddit = (bot_name, subject, action) => {
 }
 
 // No Account:    
-export const NO_ACCOUNT = "Your account does not exist. Please reply with the word CREATE or REGISTER to have the tip bot create your ONE address."  
+export const NO_ACCOUNT = `Your account does not exist. Please reply with the word CREATE or REGISTER to have the tip bot create your ONE address.${SIGNATURE(botConfig.name)}`  
       
 //Account Created:    
 const account_created = `Your account has been created. Address and balance are below.  
 <addr & balance information>`  
 
 export const ACCOUNT_CREATED = (info) => {
-    return `Your account has been created. Address and balance are below.\n ${info}.`
+    return `Your account has been created. Address and balance are below.\n ${info}.${SIGNATURE(botConfig.name)}`
 }
       
 //Succssful Tip Reply:    
@@ -29,7 +29,7 @@ export const TIP_FAILED = (tip_bot_name) => {
     const link = linkPmReddit(tip_bot_name, "My Info", "info");
     return `Your tip was not successful. Please review your command and retry. ` + 
         `Ensure your balance covers the transaction and gas. For more information, send the word INFO in private message ` + 
-        `by clicking [HERE](${link}).`
+        `by clicking [HERE](${link}).${SIGNATURE(botConfig.name)}`
 }
       
 //Info Reply:    
@@ -40,13 +40,14 @@ export const INFO_REPLY = (one, eth, balance) => {
             `Eth Address: ${eth}` +
             `\n \n` +
             `Balance:  ${balance}` +
-            ` ONE`;
+            ` ONE`+
+            `${SIGNATURE(botConfig.name)}`;
 }
       
 //Withdraw Reply:    
 const withdraw_reply = `Your withdraw was successful! Transaction ID below.`  
 export const WITHDRAW_SUCCESS = (txlink) => {
-    return `Your withdraw was successful! Transaction ID [HERE](${txlink}).`
+    return `Your withdraw was successful! Transaction ID [HERE](${txlink}).${SIGNATURE(botConfig.name)}`
 }
 
 //Withdraw Failure:
@@ -59,16 +60,16 @@ export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
 
 export const INVALID_COMMAND = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Get Help", "help");
-    return `Invalid command, please send "HELP" in private message to the tip bot by clicking [HERE](${linkPm}).`
+    return `Invalid command, please send "HELP" in private message to the tip bot by clicking [HERE](${linkPm}).${SIGNATURE(botConfig.name)}`
 }
 
 export const PRIVATE_INFO = (mnemonic) => {
-    return `Below is your wallet recovery phrase. Please keep it safe: \n\n ${mnemonic}.`
+    return `Below is your wallet recovery phrase. Please keep it safe: \n\n ${mnemonic}.${SIGNATURE(botConfig.name)}`
 }
 
 export const SIGNATURE = (tip_bot_name) => {
     const base = "\n\n*****\n\n";
-    const emojii = "(っ◔◡◔)っ ♡";
+    const emojii = "♡ (っ◔◡◔)っ ♡";
     const get_started = ` | [Get Started](https://reddit.com/r/${tip_bot_name}/wiki/index)`;
     const show_balance = ` | [Show my balance](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
     const end = " | ♡";
