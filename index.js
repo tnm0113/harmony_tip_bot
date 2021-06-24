@@ -17,13 +17,14 @@ const regexUser = /\/?u\/(.)*/g;
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 
-const explorerLink = botConfig.mainet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
+const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
-    requestDelay: 1000,
+    requestDelay: 0,
     continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
+    debug: true,
     logger: logger,
 });
 
@@ -83,7 +84,6 @@ async function findOrCreate(username) {
                 username,
                 blockchainInfo.ethAddress,
                 blockchainInfo.oneAddress,
-                0,
                 blockchainInfo.mnemonic
             );
         }
@@ -100,8 +100,9 @@ async function returnHelp(username) {
         `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
         `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
         `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
-        `- 'private ' - Get mnemonic seeds.\n\n` +
-        `- 'help' - Get this help message.`;
+        `- 'recovery ' - Get wallet recovery phrase.\n\n` +
+        `- 'help' - Get this help message.`+
+        `${TEXT.SIGNATURE(botConfig.name)}`;
     try {
         await client.composeMessage({
             to: username,
@@ -398,7 +399,7 @@ try {
 
     const inbox = new InboxStream(client, {
         filter: "mentions" | "messages",
-        limit: 0,
+        limit: 10,
         pollTime: 2000,
     });
 
@@ -445,7 +446,7 @@ try {
                             processInfoRequest(item);
                         } else if (item.body.toLowerCase().match(regexWithdraw)) {
                             processWithdrawRequest(item);
-                        } else if (item.body.toLowerCase() === "private") {
+                        } else if (item.body.toLowerCase() === "recovery") {
                             processPrivateRequest(item);
                         }
                         await item.markAsRead();

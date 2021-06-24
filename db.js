@@ -1,11 +1,16 @@
 import pkg from "sequelize";
 import { logger } from "./logger.js";
+import config from "config";
+
+const botConfig = config.get("bot");
+
+const storage = botConfig.mainnet ? "./mainnet.db.sqlite" : "./testnet.db.sqlite";
 
 const { Sequelize, DataTypes } = pkg;
 
 const sequelize = new Sequelize({
     dialect: "sqlite",
-    storage: "./database.sqlite",
+    storage: storage,
 });
 
 try {
@@ -33,10 +38,6 @@ const User = sequelize.define("User", {
     oneAddress: {
         type: DataTypes.STRING,
         allowNull: false,
-    },
-    balance: {
-        type: DataTypes.DOUBLE,
-        defaultValue: 0.0,
     },
     mnemonic: {
         type: DataTypes.STRING,
@@ -74,7 +75,7 @@ const TipLog = sequelize.define("TipLog", {
 
 TipLog.sync({});
 
-const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
+const createUser = (username, ethAddress, oneAddress, mnemonic) => {
     logger.info(
         "create user " + username + " eth " + ethAddress + " one " + oneAddress
     );
@@ -82,7 +83,6 @@ const createUser = (username, ethAddress, oneAddress, balance, mnemonic) => {
         username: username,
         ethAddress: ethAddress,
         oneAddress: oneAddress,
-        balance: balance,
         mnemonic: mnemonic,
     })
         .then((u) => {

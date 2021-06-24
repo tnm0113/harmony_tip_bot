@@ -1,6 +1,6 @@
 node_modules/
 credentials.js
-database.sqlite
+*.sqlite
 build/
 log/
 config/
