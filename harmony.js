@@ -4,6 +4,9 @@ import { logger } from "./logger.js";
 import { Wallet } from "@harmony-js/account";
 import { getAllUser } from "./db.js";
 import config from "config";
+import BN from "bn.js";
+import BigNumber from "bignumber.js";
+import artifacts from "./artifacts.json"; 
 
 const botConfig = config.get("bot");
 
@@ -93,4 +96,76 @@ function createAccount() {
     };
 }
 
-export { transfer, getAccountBalance, createAccount, addAllAccounts };
+export async function sendTransaction(signedTxn) {
+    try {
+        signedTxn
+            .observed()
+            .on("transactionHash", (txnHash) => {})
+            .on("confirmation", (confirmation) => {
+            if (confirmation !== "CONFIRMED")
+                throw new Error(
+                "Transaction confirm failed. Network fee is not enough or something went wrong."
+                );
+            })
+            .on("error", (error) => {
+            throw new Error(error);
+            });
+    
+        const [sentTxn, txnHash] = await signedTxn.sendTransaction();
+        const confirmedTxn = await sentTxn.confirm(txnHash);
+    
+        var explorerLink;
+        if (confirmedTxn.isConfirmed()) {
+            explorerLink = "/tx/" + txnHash;
+        } else {
+            return {
+            result: false,
+            mesg: "Can not confirm transaction " + txnHash,
+            };
+        }
+  
+        return {
+            result: true,
+            mesg: explorerLink,
+        };
+    } catch (err) {
+        return {
+            result: false,
+            mesg: err,
+        };
+    }
+}
+
+export const getContractInstance = (contractAddress) => {
+    const contract = hmy.contracts.createContract(artifacts.abi, contractAddress);
+    return contract;
+};
+  
+async function transferToken(contractAddress, amount, toHex, fromHex, pKey){
+    try {
+        const contract = getContractInstance(contractAddress);
+        const hexDecimals = await contract.methods.decimals().call();
+        const decimals = new BN(hexDecimals, 16).toNumber();
+        const weiAmount = new BN(new BigNumber(amount).multipliedBy(Math.pow(10, decimals)).toFixed(), 10);
+        const gasLimit = "250000";
+        const gasPrice = 1;
+        const txn = await contract.methods.transfer(toHex, weiAmount).createTransaction();
+        txn.setParams({
+            ...txn.txParams,
+            from: fromHex,
+            gasLimit,
+            gasPrice: new hmy.utils.Unit(gasPrice).asGwei().toWei(),
+        });
+        const account = hmy.wallet.addByPrivateKey(pKey);
+        const signedTxn = await account.signTransaction(txn);
+        const res = await sendTransaction(signedTxn);
+        return res;
+    } catch (error){
+        return {
+            result: false,
+            mesg: err,
+        };
+    }
+}
+
+export { transfer, getAccountBalance, createAccount, addAllAccounts, transferToken };
