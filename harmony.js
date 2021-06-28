@@ -29,7 +29,7 @@ async function addAllAccounts(){
     });
 }
 
-async function transfer(sendAddress, toAddress, amount) {
+async function transferOne(sendAddress, toAddress, amount) {
     logger.info(
         "start tranfer to " +
             toAddress +
@@ -43,22 +43,20 @@ async function transfer(sendAddress, toAddress, amount) {
         const txn = hmy.transactions.newTx({
             to: toAddress,
             value: new Unit(parseFloat(amount)).asOne().toWei(),
-            // gas limit, you can use string
             gasLimit: "21000",
-            // send token from shardID
             shardID: 0,
-            // send token to toShardID
             toShardID: 0,
-            // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
             gasPrice: new Unit("1").asGwei().toWei(),
         });
         const signedTxn = await account.signTransaction(txn);
-        const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
-        logger.info("txn hash " + txnHash.result);
-        if (txnHash.error) {
-            logger.error("txn hash error " + JSON.stringify(txnHash));
-            return null;
-        }
+        // const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
+        const res = await sendTransaction(signedTxn);
+        const txnHash = res.txnHash;
+        // logger.info("txn hash " + txnHash.result);
+        // if (txnHash.error) {
+        //     logger.error("txn hash error " + JSON.stringify(txnHash));
+        //     return null;
+        // }
         return txnHash.result;
     } catch (err) {
         logger.error("transfer error " + JSON.stringify(err) + " " + err);
@@ -127,6 +125,7 @@ export async function sendTransaction(signedTxn) {
         return {
             result: true,
             mesg: explorerLink,
+            txnHash: txnHash
         };
     } catch (err) {
         return {
@@ -168,4 +167,4 @@ async function transferToken(contractAddress, amount, toHex, fromHex, pKey){
     }
 }
 
-export { transfer, getAccountBalance, createAccount, addAllAccounts, transferToken };
+export { transferOne, getAccountBalance, createAccount, addAllAccounts, transferToken };

@@ -2,9 +2,11 @@ import { InboxStream, CommentStream } from "snoostorm";
 import Snoowrap from "snoowrap";
 import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
 import { logger } from "./logger.js";
+import { COMMANDS } from "./const.js";
+import tokens from "./tokens.json";
 import config from "config";
 import {
-    transfer,
+    transferOne,
     getAccountBalance,
     createAccount,
     addAllAccounts
@@ -16,6 +18,13 @@ const regexWithdraw = /withdraw\s(.*)/g;
 const regexUser = /\/?u\/(.)*/g;
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
+const tokenCommands = tokens.map((token) => {
+    return token.command;
+})
+
+function getTokenContractAddress(tokenCommand){
+    return tokens.filter((token) => token.command === tokenCommand)[0]?.contract_address;
+}
 
 const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
@@ -29,7 +38,11 @@ client.config({
 });
 
 async function sendMessage(to, subject, text) {
-    await client.composeMessage({ to: to, subject: subject, text: text });
+    try {
+        await client.composeMessage({ to: to, subject: subject, text: text });
+    } catch (error) {
+        logger.error("send message error " + JSON.stringify(error));
+    }
 }
 
 async function tip(fromUser, toUserName, amount) {
@@ -46,7 +59,7 @@ async function tip(fromUser, toUserName, amount) {
         const toUser = await findOrCreate(toUserName);
         const addressTo = toUser.oneAddress;
         const fromUserAddress = fromUser.ethAddress;
-        const hash = await transfer(fromUserAddress, addressTo, amount);
+        const hash = await transferOne(fromUserAddress, addressTo, amount);
         return hash;
     } catch (error) {
         logger.error("catch error " + JSON.stringify(error));
@@ -94,20 +107,20 @@ async function findOrCreate(username) {
 }
 
 async function returnHelp(username) {
-    const helpText =
-        `Commands supported via Private Message: \n\n` +
-        `- 'info' - Retrieve your account info.\n\n` +
-        `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
-        `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
-        `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
-        `- 'recovery ' - Get wallet recovery phrase.\n\n` +
-        `- 'help' - Get this help message.`+
-        `${TEXT.SIGNATURE(botConfig.name)}`;
+    // const helpText =
+    //     `Commands supported via Private Message: \n\n` +
+    //     `- 'info' - Retrieve your account info.\n\n` +
+    //     `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
+    //     `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
+    //     `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
+    //     `- 'recovery ' - Get wallet recovery phrase.\n\n` +
+    //     `- 'help' - Get this help message.`+
+    //     `${TEXT.SIGNATURE(botConfig.name)}`;
     try {
         await client.composeMessage({
             to: username,
             subject: "Tip Bot Help",
-            text: helpText,
+            text: TEXT.HELP_TEXT,
         });
     } catch (error) {
         logger.error("return help error " + JSON.stringify(error));
@@ -134,7 +147,7 @@ async function processMention(item) {
         return;
     }
     if (splitCms.length > 3) {
-        if (splitCms[1] === "tip") {
+        if (splitCms[1] === COMMANDS.TIP) {
             let amount = -1;
             let currency = "";
             let toUser = "";
@@ -162,7 +175,7 @@ async function processMention(item) {
                     amount,
                     item.id,
                     currency,
-                    "tip"
+                    COMMANDS.TIP
                 );
                 return;
             }
@@ -185,7 +198,7 @@ async function processMention(item) {
                 amount,
                 item.id,
                 currency,
-                "tip"
+                COMMANDS.TIP
             );
         } else {
             logger.debug("other case");
@@ -245,11 +258,17 @@ async function processSendRequest(item) {
                 amount,
                 item.id,
                 currency,
-                "send"
+                COMMANDS.SEND
             );
         } catch (error) {
             logger.error("process send request error " + JSON.stringify(error));
         }
+    } else {
+        await client.composeMessage({
+            to: item.author.name,
+            subject: "Widthdraw result",
+            text: TEXT.INVALID_COMMAND(botConfig.name)
+        });
     }
 }
 
@@ -298,7 +317,7 @@ async function processWithdrawRequest(item) {
                 text:"Tip bot only support ONE currently !!"
             });
         } else {
-            const txnHash = await transfer(fromUserAddress, addressTo, amount);
+            const txnHash = await transferOne(fromUserAddress, addressTo, amount);
             const txLink = explorerLink + txnHash;
             await client.composeMessage({
                 to: item.author.name,
@@ -312,8 +331,14 @@ async function processWithdrawRequest(item) {
             amount,
             item.id,
             currency,
-            "withdraw"
+            COMMANDS.WITHDRAW
         );
+    } else {
+        await client.composeMessage({
+            to: item.author.name,
+            subject: "Widthdraw result",
+            text: TEXT.INVALID_COMMAND(botConfig.name)
+        });
     }
 }
 
@@ -347,7 +372,7 @@ async function processComment(item){
             .replace("\\", " ")
             .split(" ");
         logger.debug("split cms " + splitCms);
-        if (splitCms[0] === botConfig.command){
+        if (splitCms[0] === botConfig.command || tokenCommands.findIndex(splitCms[0]) > -1){
             const log = await checkExistedInLog(item.id);
             if (log){
                 logger.info("comment already processed");
@@ -382,7 +407,7 @@ async function processComment(item){
                     amount,
                     item.id,
                     "ONE",
-                    "tip"
+                    COMMANDS.TIP
                 );
             }
         } else {
@@ -434,19 +459,19 @@ try {
                                 item.body
                         );
                         if (
-                            item.body.toLowerCase() === "create" ||
-                            item.body.toLowerCase() === "register"
+                            item.body.toLowerCase() === COMMANDS.CREATE ||
+                            item.body.toLowerCase() === COMMANDS.REGISTER
                         ) {
                             processCreateRequest(item);
-                        } else if (item.body.toLowerCase() === "help") {
+                        } else if (item.body.toLowerCase() === COMMANDS.HELP) {
                             returnHelp(item.author.name);
                         } else if (item.body.toLowerCase().match(regexSend)) {
                             processSendRequest(item);
-                        } else if (item.body.toLowerCase() === "info") {
+                        } else if (item.body.toLowerCase() === COMMANDS.INFO) {
                             processInfoRequest(item);
                         } else if (item.body.toLowerCase().match(regexWithdraw)) {
                             processWithdrawRequest(item);
-                        } else if (item.body.toLowerCase() === "recovery") {
+                        } else if (item.body.toLowerCase() === COMMANDS.RECOVERY) {
                             processPrivateRequest(item);
                         }
                         await item.markAsRead();

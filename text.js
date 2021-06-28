@@ -72,3 +72,14 @@ export const SIGNATURE = (tip_bot_name) => {
     const end = " | ♡";
     return base + emojii + get_started +  show_balance + end;
 }
+
+export const HELP_TEXT = () => {
+    return `Commands supported via Private Message: \n\n` +
+    `- 'info' - Retrieve your account info.\n\n` +
+    `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
+    `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
+    `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
+    `- 'recovery ' - Get wallet recovery phrase.\n\n` +
+    `- 'help' - Get this help message.`+
+    `${SIGNATURE(botConfig.name)}`;
+}
