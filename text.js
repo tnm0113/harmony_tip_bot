@@ -37,8 +37,7 @@ export const INFO_REPLY = (one, eth, balance) => {
             `Eth Address: ${eth}` +
             `\n \n` +
             `Balance:  ${balance}` +
-            ` ONE`+
-            `${SIGNATURE(botConfig.name)}`;
+            ` ONE.${SIGNATURE(botConfig.name)}`;
 }
       
 //Withdraw Reply:    
@@ -52,7 +51,7 @@ export const WITHDRAW_FAILED = `Your withdraw was not successful. Please check y
 
 export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Create Account", "create");
-    return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message to the tip bot by clicking [HERE](${linkPm}).`;
+    return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message to the tip bot by clicking [HERE](${linkPm}).${SIGNATURE(botConfig.name)}`;
 }
 
 export const INVALID_COMMAND = (tip_bot_name) => {
@@ -71,4 +70,10 @@ export const SIGNATURE = (tip_bot_name) => {
     const show_balance = ` | [Show my balance](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
     const end = " | ♡";
     return base + emojii + get_started +  show_balance + end;
+}
+
+export const CREATE_USER = (oneAddress, ethAddress) => {
+    return `One Address:  ${oneAddress}` +
+            `\n \n` +
+           `Eth Address:  ${ethAddress}.${SIGNATURE(botConfig.name)}`;
 }

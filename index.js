@@ -166,7 +166,8 @@ async function processMention(item) {
                 );
                 return;
             }
-            const sendUser = await findUser(item.author.name);
+            const sendUserName = await item.author.name.toLowerCase();
+            const sendUser = await findUser(sendUserName);
             if (sendUser) {
                 const txnHash = await tip(sendUser, toUser, amount);
                 if (txnHash) {
@@ -320,14 +321,8 @@ async function processWithdrawRequest(item) {
 async function processCreateRequest(item) {
     const user = await findOrCreate(item.author.name.toLowerCase());
     if (user) {
-        const text =
-            `One Address:  ` +
-            user.oneAddress +
-            `\n \n` +
-            `Eth Address: ` +
-            user.ethAddress;
         const subject = "Your account info:";
-        sendMessage(item.author.name, subject, text);
+        sendMessage(item.author.name, subject, TEXT.CREATE_USER(user.oneAddress, user.ethAddress));
     }
 }
 
