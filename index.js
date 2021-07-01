@@ -100,7 +100,6 @@ async function returnHelp(username) {
         `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
         `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
         `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
-        `- 'recovery ' - Get wallet recovery phrase.\n\n` +
         `- 'help' - Get this help message.`+
         `${TEXT.SIGNATURE(botConfig.name)}`;
     try {
@@ -441,9 +440,10 @@ try {
                             processInfoRequest(item);
                         } else if (item.body.toLowerCase().match(regexWithdraw)) {
                             processWithdrawRequest(item);
-                        } else if (item.body.toLowerCase() === "recovery") {
-                            processPrivateRequest(item);
-                        }
+                        } 
+                        // else if (item.body.toLowerCase() === "recovery") {
+                        //     processPrivateRequest(item);
+                        // }
                         await item.markAsRead();
                     }
                 }
