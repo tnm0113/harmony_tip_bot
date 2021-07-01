@@ -24,7 +24,7 @@ client.config({
     requestDelay: 0,
     continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
-    debug: true,
+    debug: botConfig.snoowrap_debug,
     logger: logger,
 });
 
