@@ -343,7 +343,6 @@ async function processComment(item){
         let splitCms  = text.split(' ');
         logger.debug("split cms " + splitCms);
         const command = botConfig.command;
-        console.log("command ", command);
         if (splitCms.findIndex((e) => e === command) > -1){
             // if (splitCms[0] === botConfig.command){
             const log = await checkExistedInLog(item.id);
