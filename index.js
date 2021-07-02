@@ -22,8 +22,8 @@ const tokenCommands = tokens.map((token) => {
     return token.command;
 })
 
-function getTokenContractAddress(tokenCommand){
-    return tokens.filter((token) => token.command === tokenCommand)[0]?.contract_address;
+function getTokenWithCommand(tokenCommand){
+    return tokens.filter((token) => token.command === tokenCommand);
 }
 
 const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
