@@ -206,7 +206,7 @@ async function processSendRequest(item) {
         try {
             const amount = splitBody[1];
             const currency = splitBody[2];
-            const toUser = splitBody[3];
+            const toUser = splitBody[3].match(regexUser) ? splitBody[3].replace("/u/","").replace("u/","") : splitBody[3];
             const fromUser = await findUser(item.author.name.toLowerCase());
             if (currency.toLowerCase() != "one"){
                 await client.composeMessage({
