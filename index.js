@@ -124,9 +124,9 @@ async function processMention(item) {
     let c = client.getComment(item.parent_id);
     let splitCms = item.body
         .toLowerCase()
-        .replace("\n", " ")
+        .replace(/\n/g, " ")
         .replace("\\", " ")
-        .split(" ");
+        .split(/\s+/g);
     logger.debug("split cms " + splitCms);
     if (splitCms[0] === botConfig.command){
         // processComment(item);
@@ -198,9 +198,9 @@ async function processMention(item) {
 async function processSendRequest(item) {
     const splitBody = item.body
         .toLowerCase()
-        .replace("\n", " ")
+        .replace(/\n/g, " ")
         .replace("\\", " ")
-        .split(" ");
+        .split(/\s+/g);
     if (splitBody.length > 3) {
         try {
             const amount = splitBody[1];
@@ -281,9 +281,9 @@ async function processPrivateRequest(item){
 async function processWithdrawRequest(item) {
     const splitBody = item.body
         .toLowerCase()
-        .replace("\n", " ")
+        .replace(/\n/g, " ")
         .replace("\\", " ")
-        .split(" ");
+        .split(/\s+/g);
     if (splitBody.length > 3) {
         const amount = splitBody[1];
         const currency = splitBody[2];
@@ -336,10 +336,10 @@ async function processComment(item){
     try {
         let text = item.body
             .toLowerCase()
-            .replace(/\n{2}/g, " ")
+            .replace(/\n/g, " ")
             .replace("\\", " ");
         logger.debug("text " + text);
-        let splitCms  = text.split(' ');
+        let splitCms  = text.split(/\s+/g);
         logger.debug("split cms " + splitCms);
         const command = botConfig.command;
         if (splitCms.findIndex((e) => e === command) > -1){
