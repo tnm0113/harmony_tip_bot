@@ -14,6 +14,7 @@ import * as TEXT from "./text.js";
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
 const regexUser = /\/?u\/(.)*/g;
+const regexNumber = /^[0-9]*[.]?[0-9]{0,18}/g
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 
@@ -153,16 +154,14 @@ async function processMention(item) {
                 toUser = author.name;
                 logger.info("tip from comment to user " + toUser + " amount " + amount);
             }
+            if (amount.match(regexNumber)){
+                amount = parseFloat(amount);
+            } else {
+                item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                return;
+            }
             if (currency.toLowerCase() != "one"){
                 item.reply("Tip bot only support ONE currently !!!");
-                await saveLog(
-                    item.author.name,
-                    toUser,
-                    amount,
-                    item.id,
-                    currency,
-                    "tip"
-                );
                 return;
             }
             const sendUserName = await item.author.name.toLowerCase();
@@ -337,7 +336,7 @@ async function processComment(item){
     try {
         let text = item.body
             .toLowerCase()
-            .replace("\n\n", " ")
+            .replace(/\n{2}/g, " ")
             .replace("\\", " ");
         logger.debug("text " + text);
         let splitCms  = text.split(' ');
@@ -354,10 +353,17 @@ async function processComment(item){
                 console.log("sliceCms ", sliceCms);
                 if (sliceCms.length < 2){
                     logger.debug("comment not valid command");
+                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
                     return;
                 }
                 const sendUserName = item.author.name.toLowerCase();
                 let amount = sliceCms[1];
+                if (amount.match(regexNumber)){
+                    amount = parseFloat(amount);
+                } else {
+                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    return;
+                }
                 let toUserName = "";
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
