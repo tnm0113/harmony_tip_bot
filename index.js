@@ -17,7 +17,7 @@ const regexUser = /\/?u\/(.)*/g;
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 
-const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
+const explorerLink = botConfig.mainnet ? "https://beta.explorer.harmony.one/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
