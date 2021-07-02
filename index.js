@@ -335,20 +335,24 @@ async function processComment(item){
             item.body
     );        
     try {
-        let splitCms = item.body
+        let text = item.body
             .toLowerCase()
             .replace("\n", " ")
-            .replace("\\", " ")
-            .split(" ");
+            .replace("\\", " ");
+        logger.debug("text " + text);
+        let splitCms  = text.split(' ');
         logger.debug("split cms " + splitCms);
-        if (splitCms.includes(botConfig.command)){
+        const command = botConfig.command;
+        console.log("command ", command);
+        if (splitCms.findIndex((e) => e === command) > -1){
             // if (splitCms[0] === botConfig.command){
             const log = await checkExistedInLog(item.id);
             if (log){
                 logger.info("comment already processed");
             } else {
-                const index = splitCms.findIndex(botConfig.command);
+                const index = splitCms.findIndex((e) => e === command);
                 const sliceCms = splitCms.slice(index);
+                console.log("sliceCms ", sliceCms);
                 if (sliceCms.length < 2){
                     logger.debug("comment not valid command");
                     return;
