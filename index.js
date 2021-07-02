@@ -341,22 +341,29 @@ async function processComment(item){
             .replace("\\", " ")
             .split(" ");
         logger.debug("split cms " + splitCms);
-        if (splitCms[0] === botConfig.command){
+        if (splitCms.includes(botConfig.command)){
+            // if (splitCms[0] === botConfig.command){
             const log = await checkExistedInLog(item.id);
             if (log){
                 logger.info("comment already processed");
             } else {
+                const index = splitCms.findIndex(botConfig.command);
+                const sliceCms = splitCms.slice(index);
+                if (sliceCms.length < 2){
+                    logger.debug("comment not valid command");
+                    return;
+                }
                 const sendUserName = item.author.name.toLowerCase();
-                let amount = splitCms[1];
+                let amount = sliceCms[1];
                 let toUserName = "";
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
                     const parentComment = client.getComment(item.parent_id);
                     toUserName = await parentComment.author.name;
                     toUserName = toUserName.toLowerCase();
-                    if (splitCms.length > 2){
-                        if (splitCms[2].match(regexUser)){
-                            toUserName = splitCms[2].replace("/u/","").replace("u/","");
+                    if (sliceCms.length > 2){
+                        if (sliceCms[2].match(regexUser)){
+                            toUserName = sliceCms[2].replace("/u/","").replace("u/","");
                         }
                     }
                     const txnHash = await tip(sendUser, toUserName, amount);
@@ -379,13 +386,15 @@ async function processComment(item){
                     "tip"
                 );
             }
+            // } else {
+            //     logger.debug("comment not valid command");
+            // }
         } else {
             logger.debug("comment not valid command");
         }
     } catch (error){
         logger.error("process comment error " + JSON.stringify(error) + " " + error);
-    }
-    
+    }    
 }
 
 try {
