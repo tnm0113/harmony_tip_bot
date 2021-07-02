@@ -337,7 +337,7 @@ async function processComment(item){
     try {
         let text = item.body
             .toLowerCase()
-            .replace("\n", " ")
+            .replace("\n\n", " ")
             .replace("\\", " ");
         logger.debug("text " + text);
         let splitCms  = text.split(' ');
