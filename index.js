@@ -9,13 +9,15 @@ import {
     transferOne,
     getAccountBalance,
     createAccount,
-    addAllAccounts
+    addAllAccounts,
+    transferToken
 } from "./harmony.js";
 import * as TEXT from "./text.js";
 
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
 const regexUser = /\/?u\/(.)*/g;
+const regexNumber = /^[0-9]*[.]?[0-9]{0,18}/g
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 const tokenCommands = tokens.map((token) => {
@@ -23,17 +25,21 @@ const tokenCommands = tokens.map((token) => {
 })
 
 function getTokenWithCommand(tokenCommand){
-    return tokens.filter((token) => token.command === tokenCommand);
+    return tokens.filter((token) => token.command.toLowerCase() === tokenCommand.toLowerCase());
 }
 
-const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
+function getTokenWithName(tokenName){
+    return tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
+}
+
+const explorerLink = botConfig.mainnet ? "https://beta.explorer.harmony.one/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
     requestDelay: 0,
     continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
-    debug: true,
+    debug: botConfig.snoowrap_debug,
     logger: logger,
 });
 
@@ -45,7 +51,7 @@ async function sendMessage(to, subject, text) {
     }
 }
 
-async function tip(fromUser, toUserName, amount) {
+async function tip(fromUser, toUserName, amount, token) {
     logger.info(
         "process tip request from " +
             fromUser.username +
@@ -59,8 +65,13 @@ async function tip(fromUser, toUserName, amount) {
         const toUser = await findOrCreate(toUserName);
         const addressTo = toUser.oneAddress;
         const fromUserAddress = fromUser.ethAddress;
-        const hash = await transferOne(fromUserAddress, addressTo, amount);
-        return hash;
+        if (token.name === "one"){
+            const hash = await transferOne(fromUserAddress, addressTo, amount);
+            return hash;
+        } else {
+            const res = await transferToken(token.contract_address, amount, toUser.ethAddress, fromUserAddress, pkey);
+            return res.txnHash;
+        }
     } catch (error) {
         logger.error("catch error " + JSON.stringify(error));
         return null;
@@ -107,15 +118,6 @@ async function findOrCreate(username) {
 }
 
 async function returnHelp(username) {
-    // const helpText =
-    //     `Commands supported via Private Message: \n\n` +
-    //     `- 'info' - Retrieve your account info.\n\n` +
-    //     `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
-    //     `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
-    //     `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
-    //     `- 'recovery ' - Get wallet recovery phrase.\n\n` +
-    //     `- 'help' - Get this help message.`+
-    //     `${TEXT.SIGNATURE(botConfig.name)}`;
     try {
         await client.composeMessage({
             to: username,
@@ -137,9 +139,9 @@ async function processMention(item) {
     let c = client.getComment(item.parent_id);
     let splitCms = item.body
         .toLowerCase()
-        .replace("\n", " ")
+        .replace(/\n/g, " ")
         .replace("\\", " ")
-        .split(" ");
+        .split(/\s+/g);
     logger.debug("split cms " + splitCms);
     if (splitCms[0] === botConfig.command){
         // processComment(item);
@@ -167,8 +169,32 @@ async function processMention(item) {
                 toUser = author.name;
                 logger.info("tip from comment to user " + toUser + " amount " + amount);
             }
-            if (currency.toLowerCase() != "one"){
-                item.reply("Tip bot only support ONE currently !!!");
+            if (amount.match(regexNumber)){
+                amount = parseFloat(amount);
+            } else {
+                item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                return;
+            }
+            // if (currency.toLowerCase() != "one"){
+            //     item.reply("Tip bot only support ONE currently !!!");
+            //     return;
+            // }
+            const token = getTokenWithName(currency)[0] || null;
+            if (token){
+                const sendUserName = await item.author.name.toLowerCase();
+                const sendUser = await findUser(sendUserName);
+                if (sendUser) {
+                    const txnHash = await tip(sendUser, toUser, amount, token);
+                    if (txnHash) {
+                        const txLink = explorerLink + txnHash;
+                        item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
+                    } else {
+                        logger.error("tip failed");
+                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                    }
+                } else {
+                    item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+                }
                 await saveLog(
                     item.author.name,
                     toUser,
@@ -177,29 +203,9 @@ async function processMention(item) {
                     currency,
                     COMMANDS.TIP
                 );
-                return;
-            }
-            const sendUser = await findUser(item.author.name);
-            if (sendUser) {
-                const txnHash = await tip(sendUser, toUser, amount);
-                if (txnHash) {
-                    const txLink = explorerLink + txnHash;
-                    item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
-                } else {
-                    logger.error("tip failed");
-                    item.reply(TEXT.TIP_FAILED);
-                }
             } else {
-                item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+                item.reply(TEXT.INVALID_COMMAND(botConfig.name));
             }
-            await saveLog(
-                item.author.name,
-                toUser,
-                amount,
-                item.id,
-                currency,
-                COMMANDS.TIP
-            );
         } else {
             logger.debug("other case");
             item.reply(TEXT.INVALID_COMMAND(botConfig.name));
@@ -212,14 +218,14 @@ async function processMention(item) {
 async function processSendRequest(item) {
     const splitBody = item.body
         .toLowerCase()
-        .replace("\n", " ")
+        .replace(/\n/g, " ")
         .replace("\\", " ")
-        .split(" ");
+        .split(/\s+/g);
     if (splitBody.length > 3) {
         try {
             const amount = splitBody[1];
             const currency = splitBody[2];
-            const toUser = splitBody[3];
+            const toUser = splitBody[3].match(regexUser) ? splitBody[3].replace("/u/","").replace("u/","") : splitBody[3];
             const fromUser = await findUser(item.author.name.toLowerCase());
             if (currency.toLowerCase() != "one"){
                 await client.composeMessage({
@@ -301,9 +307,9 @@ async function processPrivateRequest(item){
 async function processWithdrawRequest(item) {
     const splitBody = item.body
         .toLowerCase()
-        .replace("\n", " ")
+        .replace(/\n/g, " ")
         .replace("\\", " ")
-        .split(" ");
+        .split(/\s+/g);
     if (splitBody.length > 3) {
         const amount = splitBody[1];
         const currency = splitBody[2];
@@ -345,14 +351,8 @@ async function processWithdrawRequest(item) {
 async function processCreateRequest(item) {
     const user = await findOrCreate(item.author.name.toLowerCase());
     if (user) {
-        const text =
-            `One Address:  ` +
-            user.oneAddress +
-            `\n \n` +
-            `Eth Address: ` +
-            user.ethAddress;
         const subject = "Your account info:";
-        sendMessage(item.author.name, subject, text);
+        sendMessage(item.author.name, subject, TEXT.CREATE_USER(user.oneAddress, user.ethAddress));
     }
 }
 
@@ -366,31 +366,50 @@ async function processComment(item){
             item.body
     );        
     try {
-        let splitCms = item.body
+        let text = item.body
             .toLowerCase()
-            .replace("\n", " ")
-            .replace("\\", " ")
-            .split(" ");
+            .replace(/\n/g, " ")
+            .replace("\\", " ");
+        logger.debug("text " + text);
+        let splitCms  = text.split(/\s+/g);
         logger.debug("split cms " + splitCms);
-        if (splitCms[0] === botConfig.command || tokenCommands.findIndex(splitCms[0]) > -1){
+        const command = botConfig.command;
+        if (splitCms.findIndex((e) => e === command) > -1 || splitCms.findIndex((e => tokenCommands.includes(e)) > -1)){
+            // if (splitCms[0] === botConfig.command){
             const log = await checkExistedInLog(item.id);
             if (log){
                 logger.info("comment already processed");
             } else {
+                const index = splitCms.findIndex((e) => e === command);
+                const indexTokenCommand = splitCms.findIndex((e => tokenCommands.includes(e)) > -1);
+                const sliceCms = index > -1 ? splitCms.slice(index) : splitCms.slice(indexTokenCommand);
+                const token = index > -1 ? getTokenWithCommand(command)[0] : getTokenWithCommand(splitCms[indexTokenCommand])[0];
+                console.log("sliceCms ", sliceCms);
+                if (sliceCms.length < 2){
+                    logger.debug("comment not valid command");
+                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    return;
+                }
                 const sendUserName = item.author.name.toLowerCase();
-                let amount = splitCms[1];
+                let amount = sliceCms[1];
+                if (amount.match(regexNumber)){
+                    amount = parseFloat(amount);
+                } else {
+                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    return;
+                }
                 let toUserName = "";
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
                     const parentComment = client.getComment(item.parent_id);
                     toUserName = await parentComment.author.name;
                     toUserName = toUserName.toLowerCase();
-                    if (splitCms.length > 2){
-                        if (splitCms[2].match(regexUser)){
-                            toUserName = splitCms[2].replace("/u/","").replace("u/","");
+                    if (sliceCms.length > 2){
+                        if (sliceCms[2].match(regexUser)){
+                            toUserName = sliceCms[2].replace("/u/","").replace("u/","");
                         }
                     }
-                    const txnHash = await tip(sendUser, toUserName, amount);
+                    const txnHash = await tip(sendUser, toUserName, amount, token);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
                         item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink));
@@ -410,13 +429,15 @@ async function processComment(item){
                     COMMANDS.TIP
                 );
             }
+            // } else {
+            //     logger.debug("comment not valid command");
+            // }
         } else {
             logger.debug("comment not valid command");
         }
     } catch (error){
         logger.error("process comment error " + JSON.stringify(error) + " " + error);
-    }
-    
+    }    
 }
 
 try {
@@ -471,9 +492,10 @@ try {
                             processInfoRequest(item);
                         } else if (item.body.toLowerCase().match(regexWithdraw)) {
                             processWithdrawRequest(item);
-                        } else if (item.body.toLowerCase() === COMMANDS.RECOVERY) {
-                            processPrivateRequest(item);
-                        }
+                        } 
+                        // else if (item.body.toLowerCase() === "recovery") {
+                        //     processPrivateRequest(item);
+                        // }
                         await item.markAsRead();
                     }
                 }

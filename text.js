@@ -37,8 +37,7 @@ export const INFO_REPLY = (one, eth, balance) => {
             `Eth Address: ${eth}` +
             `\n \n` +
             `Balance:  ${balance}` +
-            ` ONE`+
-            `${SIGNATURE(botConfig.name)}`;
+            ` ONE.${SIGNATURE(botConfig.name)}`;
 }
       
 //Withdraw Reply:    
@@ -52,7 +51,7 @@ export const WITHDRAW_FAILED = `Your withdraw was not successful. Please check y
 
 export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Create Account", "create");
-    return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message to the tip bot by clicking [HERE](${linkPm}).`;
+    return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message to the tip bot by clicking [HERE](${linkPm}).${SIGNATURE(botConfig.name)}`;
 }
 
 export const INVALID_COMMAND = (tip_bot_name) => {
@@ -67,7 +66,7 @@ export const PRIVATE_INFO = (mnemonic) => {
 export const SIGNATURE = (tip_bot_name) => {
     const base = "\n\n*****\n\n";
     const emojii = "♡ (っ◔◡◔)っ ♡";
-    const get_started = ` | [Get Started](https://www.reddit.com/r/harmony_one/wiki/index/harmonytipbot)`;
+    const get_started = ` | [Get Started](https://www.reddit.com/r/harmony_one/wiki/harmonytipbot)`;
     const show_balance = ` | [Show my balance](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
     const end = " | ♡";
     return base + emojii + get_started +  show_balance + end;
@@ -79,7 +78,12 @@ export const HELP_TEXT = () => {
     `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
     `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
     `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
-    `- 'recovery ' - Get wallet recovery phrase.\n\n` +
     `- 'help' - Get this help message.`+
     `${SIGNATURE(botConfig.name)}`;
+}
+
+export const CREATE_USER = (oneAddress, ethAddress) => {
+    return `One Address:  ${oneAddress}` +
+            `\n \n` +
+           `Eth Address:  ${ethAddress}.${SIGNATURE(botConfig.name)}`;
 }
