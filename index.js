@@ -173,7 +173,7 @@ async function processMention(item) {
                     item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
                 } else {
                     logger.error("tip failed");
-                    item.reply(TEXT.TIP_FAILED);
+                    item.reply(TEXT.TIP_FAILED(botConfig.name));
                 }
             } else {
                 item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
