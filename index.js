@@ -69,7 +69,7 @@ async function tip(fromUser, toUserName, amount, token) {
             const hash = await transferOne(fromUserAddress, addressTo, amount);
             return hash;
         } else {
-            const res = await transferToken(token.contract_address, amount, toUser.ethAddress, fromUserAddress, pkey);
+            const res = await transferToken(token.contract_address, amount, toUser.ethAddress, fromUserAddress);
             return res.txnHash;
         }
     } catch (error) {
