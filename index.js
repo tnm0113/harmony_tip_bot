@@ -20,16 +20,16 @@ const regexUser = /\/?u\/(.)*/g;
 const regexNumber = /^[0-9]*[.]?[0-9]{0,18}/g
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
-const tokenCommands = tokens.map((token) => {
+const tokenCommands = tokens.tokens.map((token) => {
     return token.command;
 })
 
 function getTokenWithCommand(tokenCommand){
-    return tokens.filter((token) => token.command.toLowerCase() === tokenCommand.toLowerCase());
+    return tokens.tokens.filter((token) => token.command.toLowerCase() === tokenCommand.toLowerCase());
 }
 
 function getTokenWithName(tokenName){
-    return tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
+    return tokens.tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
 }
 
 const explorerLink = botConfig.mainnet ? "https://beta.explorer.harmony.one/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
