@@ -22,7 +22,7 @@ const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : 
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
-    requestDelay: 0,
+    requestDelay: botConfig.request_delay || 0,
     continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
     debug: botConfig.snoowrap_debug,
