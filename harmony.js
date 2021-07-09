@@ -40,26 +40,60 @@ async function transfer(sendAddress, toAddress, amount) {
         const txn = hmy.transactions.newTx({
             to: toAddress,
             value: new Unit(parseFloat(amount)).asOne().toWei(),
-            // gas limit, you can use string
             gasLimit: "21000",
-            // send token from shardID
             shardID: 0,
-            // send token to toShardID
             toShardID: 0,
-            // gas Price, you can use Unit class, and use Gwei, then remember to use toWei(), which will be transformed to BN
             gasPrice: new Unit("1").asGwei().toWei(),
         });
         const signedTxn = await account.signTransaction(txn);
-        const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
-        logger.info("txn hash " + txnHash.result);
-        if (txnHash.error) {
-            logger.error("txn hash error " + JSON.stringify(txnHash));
+        const res = await sendTransaction(signedTxn);
+        logger.info("res send transaction " + JSON.stringify(res));
+        if (res.result) {
+            return res.txnHash;
+        } else {
+            logger.error("txn hash error " + res.mesg);
             return null;
         }
-        return txnHash.result;
     } catch (err) {
         logger.error("transfer error " + JSON.stringify(err) + " " + err);
         return null;
+    }
+}
+
+export async function sendTransaction(signedTxn) {
+    try {
+        signedTxn
+            .observed()
+            .on("transactionHash", (txnHash) => {})
+            .on("confirmation", (confirmation) => {
+            if (confirmation !== "CONFIRMED")
+                throw new Error(
+                    "Transaction confirm failed. Network fee is not enough or something went wrong."
+                );
+            })
+            .on("error", (error) => {
+                throw new Error(error);
+            });
+    
+        const [sentTxn, txnHash] = await signedTxn.sendTransaction();
+        const confirmedTxn = await sentTxn.confirm(txnHash);
+    
+        if (confirmedTxn.isConfirmed()) {
+            return {
+                result: true,
+                txnHash: txnHash
+            };
+        } else {
+            return {
+                result: false,
+                mesg: "Can not confirm transaction " + txnHash,
+            };
+        }
+    } catch (err) {
+        return {
+            result: false,
+            mesg: err,
+        };
     }
 }
 
