@@ -298,12 +298,20 @@ async function processWithdrawRequest(item) {
             });
         } else {
             const txnHash = await transfer(fromUserAddress, addressTo, amount);
-            const txLink = explorerLink + txnHash;
-            await client.composeMessage({
-                to: item.author.name,
-                subject: "Widthdraw result",
-                text: TEXT.WITHDRAW_SUCCESS(txLink)
-            });
+            if (txnHash){
+                const txLink = explorerLink + txnHash;
+                await client.composeMessage({
+                    to: item.author.name,
+                    subject: "Widthdraw result",
+                    text: TEXT.WITHDRAW_SUCCESS(txLink)
+                });
+            } else {
+                await client.composeMessage({
+                    to: item.author.name,
+                    subject: "Widthdraw result:",
+                    text: TEXT.WITHDRAW_FAILED
+                });
+            }
         }
         await saveLog(
             item.author.name.toLowerCase(),
