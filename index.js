@@ -128,70 +128,79 @@ async function processMention(item) {
         .replace("\\", " ")
         .split(/\s+/g);
     logger.debug("split cms " + splitCms);
-    if (splitCms[0] === botConfig.command){
+    if (splitCms.findIndex((e) => e === botConfig.command) > -1){
         // processComment(item);
         logger.debug("process in comment section");
         return;
     }
-    if (splitCms.length > 3) {
-        if (splitCms[1] === "tip") {
-            let amount = -1;
-            let currency = "";
-            let toUser = "";
-            if (splitCms[2].match(regexUser)){
-                if (splitCms.length > 4){
-                    toUser = splitCms[2].replace("/u/","").replace("u/","");
-                    amount = splitCms[3];
-                    currency = splitCms[4];
-                    logger.debug("send from comment to user " + toUser +  " amount " + amount);
+    if (splitCms.findIndex((e) => e === '/u/' + botConfig.name) > -1 || 
+        splitCms.findIndex((e) => e === 'u/' + botConfig.name) > -1){
+        const index = splitCms.findIndex((e) => e === 'tip');
+        if (index > -1){
+            const sliceCms = splitCms.slice(index);
+            logger.debug("slicecms " + sliceCms);
+            if (sliceCms.length > 2) {
+                let amount = -1;
+                let currency = "";
+                let toUser = "";
+                if (sliceCms[1].match(regexUser)){
+                    if (sliceCms.length > 3){
+                        toUser = sliceCms[1].replace("/u/","").replace("u/","");
+                        amount = sliceCms[2];
+                        currency = sliceCms[3];
+                        logger.debug("send from comment to user " + toUser +  " amount " + amount);
+                    } else {
+                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                    }
                 } else {
-                    item.reply(TEXT.TIP_FAILED(botConfig.name));
+                    amount = sliceCms[1];
+                    currency = sliceCms[2];
+                    const author = await c.author;
+                    toUser = author.name;
+                    logger.info("tip from comment to user " + toUser + " amount " + amount);
                 }
+                if (amount.match(regexNumber)){
+                    amount = parseFloat(amount);
+                } else {
+                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    return;
+                }
+                if (currency.toLowerCase() != "one"){
+                    item.reply("Tip bot only support ONE currently !!!");
+                    return;
+                }
+                const sendUserName = await item.author.name.toLowerCase();
+                const sendUser = await findUser(sendUserName);
+                if (sendUser) {
+                    const txnHash = await tip(sendUser, toUser, amount);
+                    if (txnHash) {
+                        const txLink = explorerLink + txnHash;
+                        item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
+                    } else {
+                        logger.error("tip failed");
+                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                    }
+                } else {
+                    item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+                }
+                await saveLog(
+                    item.author.name,
+                    toUser,
+                    amount,
+                    item.id,
+                    currency,
+                    "tip"
+                );
             } else {
-                amount = splitCms[2];
-                currency = splitCms[3];
-                const author = await c.author;
-                toUser = author.name;
-                logger.info("tip from comment to user " + toUser + " amount " + amount);
-            }
-            if (amount.match(regexNumber)){
-                amount = parseFloat(amount);
-            } else {
+                logger.debug("other case");
                 item.reply(TEXT.INVALID_COMMAND(botConfig.name));
-                return;
             }
-            if (currency.toLowerCase() != "one"){
-                item.reply("Tip bot only support ONE currently !!!");
-                return;
-            }
-            const sendUserName = await item.author.name.toLowerCase();
-            const sendUser = await findUser(sendUserName);
-            if (sendUser) {
-                const txnHash = await tip(sendUser, toUser, amount);
-                if (txnHash) {
-                    const txLink = explorerLink + txnHash;
-                    item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
-                } else {
-                    logger.error("tip failed");
-                    item.reply(TEXT.TIP_FAILED(botConfig.name));
-                }
-            } else {
-                item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
-            }
-            await saveLog(
-                item.author.name,
-                toUser,
-                amount,
-                item.id,
-                currency,
-                "tip"
-            );
         } else {
-            logger.debug("other case");
             item.reply(TEXT.INVALID_COMMAND(botConfig.name));
         }
+        
     } else {
-        item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+        logger.debug("comment mention is not a command");
     }
 }
 
