@@ -121,6 +121,8 @@ async function processMention(item) {
             " body " +
             item.body
     );
+    if (item.author.name === botConfig.name)
+        return;
     let c = client.getComment(item.parent_id);
     let splitCms = item.body
         .toLowerCase()
