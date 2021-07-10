@@ -352,6 +352,7 @@ async function processComment(item){
         const command = botConfig.command;
         if (splitCms.findIndex((e) => e === command) > -1){
             // if (splitCms[0] === botConfig.command){
+            logger.debug("check log in db");
             const log = await checkExistedInLog(item.id);
             if (log){
                 logger.info("comment already processed");

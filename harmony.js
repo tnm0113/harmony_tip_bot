@@ -75,7 +75,9 @@ export async function sendTransaction(signedTxn) {
                 throw new Error(error);
             });
     
+        logger.debug("send transaction");
         const [sentTxn, txnHash] = await signedTxn.sendTransaction();
+        logger.debug("confirm transaction " + txnHash);
         const confirmedTxn = await sentTxn.confirm(txnHash);
     
         if (confirmedTxn.isConfirmed()) {
