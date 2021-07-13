@@ -11,6 +11,7 @@ const { Sequelize, DataTypes } = pkg;
 const sequelize = new Sequelize({
     dialect: "sqlite",
     storage: storage,
+    logging: msg => logger.debug(msg)
 });
 
 try {
@@ -137,14 +138,25 @@ const saveLog = function (
 };
 
 const checkExistedInLog = function (reddit_source) {
-    return TipLog.findOne({ where: { reddit_source: reddit_source } })
-        .then((rs) => {
-            if (rs) return rs.dataValues;
-            return rs;
+    // return TipLog.findOne({ where: { reddit_source: reddit_source } })
+    //     .then((rs) => {
+    //         if (rs) return rs.dataValues;
+    //         return rs;
+    //     })
+    //     .catch((e) => {
+    //         throw e;
+    //     });
+    const sql = `SELECT * from TipLogs where reddit_source = '${reddit_source}'`;
+    return sequelize.query(sql)
+        .then(([results, metadata] ) => {
+            if (results.length > 0)
+                return JSON.stringify(results[0]);
+            else 
+                return null;
         })
         .catch((e) => {
             throw e;
-        });
+        })
 };
 
 export { createUser, findUser, saveLog, checkExistedInLog, getAllUser };
