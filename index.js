@@ -30,7 +30,12 @@ client.config({
 });
 
 async function sendMessage(to, subject, text) {
-    await client.composeMessage({ to: to, subject: subject, text: text });
+    try {
+        logger.debug("send message " + subject +  " to " + to);
+        await client.composeMessage({ to: to, subject: subject, text: text });
+    } catch (error) {
+        logger.error("send message error " + error);
+    }
 }
 
 async function tip(fromUser, toUserName, amount) {
@@ -266,11 +271,11 @@ async function processInfoRequest(item) {
     if (info) {
         const text = TEXT.INFO_REPLY(info.oneAddress, info.ethAddress, info.balance);
         const subject = "Your account info:";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     } else {
         const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
         const subject = "Help message";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     }
 }
 
@@ -279,11 +284,11 @@ async function processPrivateRequest(item){
     if (user) {
         const text = TEXT.PRIVATE_INFO(user.mnemonic);
         const subject = "Your private info:";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     } else {
         const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
         const subject = "Help message";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     }
 }
 
@@ -337,7 +342,7 @@ async function processCreateRequest(item) {
     const user = await findOrCreate(item.author.name.toLowerCase());
     if (user) {
         const subject = "Your account info:";
-        sendMessage(item.author.name, subject, TEXT.CREATE_USER(user.oneAddress, user.ethAddress));
+        await sendMessage(item.author.name, subject, TEXT.CREATE_USER(user.oneAddress, user.ethAddress));
     }
 }
 
