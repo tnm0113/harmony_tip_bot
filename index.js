@@ -55,7 +55,7 @@ async function tip(fromUser, toUserName, amount) {
         const hash = await transfer(fromUserAddress, addressTo, amount);
         return hash;
     } catch (error) {
-        logger.error("catch error " + JSON.stringify(error));
+        logger.error("catch error " + JSON.stringify(error) + error);
         return null;
     }
 }
@@ -74,7 +74,7 @@ async function getBalance(username) {
             return null;
         }
     } catch (error) {
-        logger.error("get balance error " + JSON.stringify(error));
+        logger.error("get balance error " + JSON.stringify(error) + error);
     }
 }
 
@@ -94,7 +94,7 @@ async function findOrCreate(username) {
             );
         }
     } catch (error) {
-        logger.error("findOrCreate user error " + JSON.stringify(error));
+        logger.error("findOrCreate user error " + JSON.stringify(error) + error);
         return null;
     }
 }
@@ -115,7 +115,7 @@ async function returnHelp(username) {
             text: helpText,
         });
     } catch (error) {
-        logger.error("return help error " + JSON.stringify(error));
+        logger.error("return help error " + JSON.stringify(error) + error);
     }
 }
 
@@ -263,7 +263,7 @@ async function processSendRequest(item) {
                 "send"
             );
         } catch (error) {
-            logger.error("process send request error " + JSON.stringify(error));
+            logger.error("process send request error " + JSON.stringify(error) + error);
         }
     }
 }
@@ -492,12 +492,12 @@ try {
                 }
             }
         } catch (error) {
-            logger.error("process item inbox error " + JSON.stringify(error));
+            logger.error("process item inbox error " + error);
         }
     });
 
     inbox.on("end", () => logger.info("Inbox subcribe ended!!!"));
 } catch (error){
-    logger.error("snoowrap error " + JSON.stringify(error));
+    logger.error("snoowrap error " + JSON.stringify(error) + error);
 }
 
