@@ -100,16 +100,27 @@ const getAllUser = function () {
 };
 
 const findUser = function (username) {
-    return User.findOne({ where: { username: username } })
-        .then((rs) => {
-            // console.log("find user rs ", rs);
-            if (rs) return rs.dataValues;
-            return rs;
+    // return User.findOne({ where: { username: username } })
+    //     .then((rs) => {
+    //         // console.log("find user rs ", rs);
+    //         if (rs) return rs.dataValues;
+    //         return rs;
+    //     })
+    //     .catch((e) => {
+    //         logger.error("findUse error " + JSON.stringify(e));
+    //         throw e;
+    //     });
+    const sql = `SELECT * from Users where username = '${username}'`;
+    return sequelize.query(sql)
+        .then(([results, metadata] ) => {
+            if (results.length > 0)
+                return JSON.stringify(results[0]);
+            else 
+                return null;
         })
         .catch((e) => {
-            logger.error("findUse error " + JSON.stringify(e));
             throw e;
-        });
+        })    
 };
 
 const saveLog = function (
