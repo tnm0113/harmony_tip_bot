@@ -113,8 +113,9 @@ const findUser = function (username) {
     const sql = `SELECT * from Users where username = '${username}'`;
     return sequelize.query(sql)
         .then(([results, metadata] ) => {
+            console.log(results);
             if (results.length > 0)
-                return JSON.stringify(results[0]);
+                return results[0];
             else 
                 return null;
         })
@@ -161,7 +162,7 @@ const checkExistedInLog = function (reddit_source) {
     return sequelize.query(sql)
         .then(([results, metadata] ) => {
             if (results.length > 0)
-                return JSON.stringify(results[0]);
+                return results[0];
             else 
                 return null;
         })
