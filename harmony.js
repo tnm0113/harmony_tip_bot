@@ -178,7 +178,7 @@ export const getContractInstance = (contractAddress) => {
     return contract;
 };
   
-async function transferToken(contractAddress, amount, toHex, fromHex, pKey){
+async function transferToken(contractAddress, amount, toHex, fromHex){
     try {
         const contract = getContractInstance(contractAddress);
         const hexDecimals = await contract.methods.decimals().call();
@@ -193,7 +193,7 @@ async function transferToken(contractAddress, amount, toHex, fromHex, pKey){
             gasLimit,
             gasPrice: new hmy.utils.Unit(gasPrice).asGwei().toWei(),
         });
-        const account = hmy.wallet.addByPrivateKey(pKey);
+        const account = hmy.wallet.getAccount(fromHex);
         const signedTxn = await account.signTransaction(txn);
         const res = await sendTransaction(signedTxn);
         return res;

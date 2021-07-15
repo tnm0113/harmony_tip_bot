@@ -20,16 +20,16 @@ const regexUser = /\/?u\/(.)*/g;
 const regexNumber = /^[0-9]*[.]?[0-9]{0,18}/g
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
-const tokenCommands = tokens.map((token) => {
+const tokenCommands = tokens.tokens.map((token) => {
     return token.command;
 })
 
 function getTokenWithCommand(tokenCommand){
-    return tokens.filter((token) => token.command.toLowerCase() === tokenCommand.toLowerCase());
+    return tokens.tokens.filter((token) => token.command.toLowerCase() === tokenCommand.toLowerCase());
 }
 
 function getTokenWithName(tokenName){
-    return tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
+    return tokens.tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
 }
 const itemExpireTime = botConfig.item_expire_time || 60;
 
@@ -71,7 +71,7 @@ async function tip(fromUser, toUserName, amount, token) {
             const hash = await transferOne(fromUserAddress, addressTo, amount);
             return hash;
         } else {
-            const res = await transferToken(token.contract_address, amount, toUser.ethAddress, fromUserAddress, pkey);
+            const res = await transferToken(token.contract_address, amount, toUser.ethAddress, fromUserAddress);
             return res.txnHash;
         }
     } catch (error) {
