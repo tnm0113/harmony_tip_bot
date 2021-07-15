@@ -17,6 +17,7 @@ const regexUser = /\/?u\/(.)*/g;
 const regexNumber = /^[0-9]*[.]?[0-9]{0,18}/g
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
+const itemExpireTime = botConfig.item_expire_time || 60;
 
 const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
@@ -136,7 +137,6 @@ async function processMention(item) {
         .split(/\s+/g);
     logger.debug("split cms " + splitCms);
     if (splitCms.findIndex((e) => e === botConfig.command) > -1){
-        // processComment(item);
         logger.debug("process in comment section");
         return;
     }
@@ -367,15 +367,18 @@ async function processComment(item){
         logger.debug("split cms " + splitCms);
         const command = botConfig.command;
         if (splitCms.findIndex((e) => e === command) > -1){
-            // if (splitCms[0] === botConfig.command){
-            logger.debug("check log in db");
-            const log = await checkExistedInLog(item.id);
-            if (log){
-                logger.info("comment already processed");
+            let allowProcess = false;
+            if (Date.now()/1000 - item.created_utc > itemExpireTime){
+                logger.debug("need to check log in db");
+                const log = await checkExistedInLog(item.id);
+                allowProcess = log === null;
             } else {
+                allowProcess = true;
+            }
+            if (allowProcess){
                 const index = splitCms.findIndex((e) => e === command);
                 const sliceCms = splitCms.slice(index);
-                console.log("sliceCms ", sliceCms);
+                logger.debug("sliceCms ", sliceCms);
                 if (sliceCms.length < 2){
                     logger.debug("comment not valid command");
                     item.reply(TEXT.INVALID_COMMAND(botConfig.name));
@@ -419,10 +422,9 @@ async function processComment(item){
                     "ONE",
                     "tip"
                 );
+            } else {
+                logger.debug("comment item already process");
             }
-            // } else {
-            //     logger.debug("comment not valid command");
-            // }
         } else {
             logger.debug("comment not valid command");
         }
@@ -457,38 +459,39 @@ try {
     inbox.on("item", async function (item) {
         try {
             if (item.new) {
-                const log = await checkExistedInLog(item.id);
-                if (log) {
-                    logger.info("tip action already processed");
-                } else {
-                    if (item.was_comment) {
-                        processMention(item);
+                if (item.was_comment) {
+                    let allowProcess = false;
+                    if (Date.now()/1000 - item.created_utc > itemExpireTime){
+                        logger.debug("need to check log in db");
+                        const log = await checkExistedInLog(item.id);
+                        allowProcess = log ? false : true;
                     } else {
-                        logger.info(
-                            "process private message from " +
-                                item.author.name +
-                                " body " +
-                                item.body
-                        );
-                        if (
-                            item.body.toLowerCase() === "create" ||
-                            item.body.toLowerCase() === "register"
-                        ) {
-                            processCreateRequest(item);
-                        } else if (item.body.toLowerCase() === "help") {
-                            returnHelp(item.author.name);
-                        } else if (item.body.toLowerCase().match(regexSend)) {
-                            processSendRequest(item);
-                        } else if (item.body.toLowerCase() === "info") {
-                            processInfoRequest(item);
-                        } else if (item.body.toLowerCase().match(regexWithdraw)) {
-                            processWithdrawRequest(item);
-                        } 
-                        // else if (item.body.toLowerCase() === "recovery") {
-                        //     processPrivateRequest(item);
-                        // }
-                        await item.markAsRead();
+                        allowProcess = true;
                     }
+                    if (allowProcess)
+                        processMention(item);
+                    else
+                        logger.debug("inbox item mention already processed");    
+                } else {
+                    logger.info("process private message from " + item.author.name + " body " + item.body);
+                    if (
+                        item.body.toLowerCase() === "create" ||
+                        item.body.toLowerCase() === "register"
+                    ) {
+                        processCreateRequest(item);
+                    } else if (item.body.toLowerCase() === "help") {
+                        returnHelp(item.author.name);
+                    } else if (item.body.toLowerCase().match(regexSend)) {
+                        processSendRequest(item);
+                    } else if (item.body.toLowerCase() === "info") {
+                        processInfoRequest(item);
+                    } else if (item.body.toLowerCase().match(regexWithdraw)) {
+                        processWithdrawRequest(item);
+                    } 
+                    // else if (item.body.toLowerCase() === "recovery") {
+                    //     processPrivateRequest(item);
+                    // }
+                    await item.markAsRead();
                 }
             }
         } catch (error) {
