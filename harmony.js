@@ -57,8 +57,8 @@ async function transferOne(sendAddress, toAddress, amount) {
             logger.error("txn hash error " + res.mesg);
             return null;
         }
-    } catch (err) {
-        logger.error("transfer error " + JSON.stringify(err) + " " + err);
+    } catch (error) {
+        logger.error("transfer error " + JSON.stringify(error) + " " + error);
         return null;
     }
 }
@@ -116,8 +116,8 @@ export async function sendTransaction(signedTxn) {
             explorerLink = "/tx/" + txnHash;
         } else {
             return {
-            result: false,
-            mesg: "Can not confirm transaction " + txnHash,
+                result: false,
+                mesg: "Can not confirm transaction " + txnHash,
             };
         }
   
@@ -157,11 +157,18 @@ async function transferToken(contractAddress, amount, toHex, fromHex){
         const account = hmy.wallet.getAccount(fromHex);
         const signedTxn = await account.signTransaction(txn);
         const res = await sendTransaction(signedTxn);
-        return res;
+        logger.info("res send transaction " + JSON.stringify(res));
+        if (res.result) {
+            return res.txnHash;
+        } else {
+            logger.error("tranfer token hash error " + res.mesg);
+            return null;
+        }
     } catch (error){
+        logger.error("tranfer token error " + error);
         return {
             result: false,
-            mesg: err,
+            mesg: error,
         };
     }
 }

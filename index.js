@@ -71,8 +71,8 @@ async function tip(fromUser, toUserName, amount, token) {
             const hash = await transferOne(fromUserAddress, addressTo, amount);
             return hash;
         } else {
-            const res = await transferToken(token.contract_address, amount, toUser.ethAddress, fromUserAddress);
-            return res.txnHash;
+            const hash = await transferToken(token.contract_address, amount, toUser.ethAddress, fromUserAddress);
+            return hash;
         }
     } catch (error) {
         logger.error("catch error " + JSON.stringify(error) + error);
@@ -157,10 +157,10 @@ async function processMention(item) {
         if (index > -1){
             const sliceCms = splitCms.slice(index);
             logger.debug("slicecms " + sliceCms);
+            let amount = -1;
+            let currency = "";
+            let toUser = "";
             if (sliceCms.length > 2) {
-                let amount = -1;
-                let currency = "";
-                let toUser = "";
                 if (sliceCms[1].match(regexUser)){
                     if (sliceCms.length > 3){
                         toUser = sliceCms[1].replace("/u/","").replace("u/","");
