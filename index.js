@@ -31,12 +31,13 @@ function getTokenWithCommand(tokenCommand){
 function getTokenWithName(tokenName){
     return tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
 }
+const itemExpireTime = botConfig.item_expire_time || 60;
 
-const explorerLink = botConfig.mainnet ? "https://beta.explorer.harmony.one/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
+const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
-    requestDelay: 0,
+    requestDelay: botConfig.request_delay || 0,
     continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
     debug: botConfig.snoowrap_debug,
@@ -45,9 +46,10 @@ client.config({
 
 async function sendMessage(to, subject, text) {
     try {
+        logger.debug("send message " + subject +  " to " + to);
         await client.composeMessage({ to: to, subject: subject, text: text });
     } catch (error) {
-        logger.error("send message error " + JSON.stringify(error));
+        logger.error("send message error " + error);
     }
 }
 
@@ -73,7 +75,7 @@ async function tip(fromUser, toUserName, amount, token) {
             return res.txnHash;
         }
     } catch (error) {
-        logger.error("catch error " + JSON.stringify(error));
+        logger.error("catch error " + JSON.stringify(error) + error);
         return null;
     }
 }
@@ -92,7 +94,7 @@ async function getBalance(username) {
             return null;
         }
     } catch (error) {
-        logger.error("get balance error " + JSON.stringify(error));
+        logger.error("get balance error " + JSON.stringify(error) + error);
     }
 }
 
@@ -112,7 +114,7 @@ async function findOrCreate(username) {
             );
         }
     } catch (error) {
-        logger.error("findOrCreate user error " + JSON.stringify(error));
+        logger.error("findOrCreate user error " + JSON.stringify(error) + error);
         return null;
     }
 }
@@ -125,7 +127,7 @@ async function returnHelp(username) {
             text: TEXT.HELP_TEXT,
         });
     } catch (error) {
-        logger.error("return help error " + JSON.stringify(error));
+        logger.error("return help error " + JSON.stringify(error) + error);
     }
 }
 
@@ -136,6 +138,8 @@ async function processMention(item) {
             " body " +
             item.body
     );
+    if (item.author.name === botConfig.name)
+        return;
     let c = client.getComment(item.parent_id);
     let splitCms = item.body
         .toLowerCase()
@@ -143,24 +147,35 @@ async function processMention(item) {
         .replace("\\", " ")
         .split(/\s+/g);
     logger.debug("split cms " + splitCms);
-    if (splitCms[0] === botConfig.command){
-        // processComment(item);
+    if (splitCms.findIndex((e) => e === botConfig.command) > -1){
         logger.debug("process in comment section");
         return;
     }
-    if (splitCms.length > 3) {
-        if (splitCms[1] === COMMANDS.TIP) {
-            let amount = -1;
-            let currency = "";
-            let toUser = "";
-            if (splitCms[2].match(regexUser)){
-                if (splitCms.length > 4){
-                    toUser = splitCms[2].replace("/u/","").replace("u/","");
-                    amount = splitCms[3];
-                    currency = splitCms[4];
-                    logger.debug("send from comment to user " + toUser +  " amount " + amount);
+    if (splitCms.findIndex((e) => e === '/u/' + botConfig.name) > -1 || 
+        splitCms.findIndex((e) => e === 'u/' + botConfig.name) > -1){
+        const index = splitCms.findIndex((e) => e === COMMANDS.TIP);
+        if (index > -1){
+            const sliceCms = splitCms.slice(index);
+            logger.debug("slicecms " + sliceCms);
+            if (sliceCms.length > 2) {
+                let amount = -1;
+                let currency = "";
+                let toUser = "";
+                if (sliceCms[1].match(regexUser)){
+                    if (sliceCms.length > 3){
+                        toUser = sliceCms[1].replace("/u/","").replace("u/","");
+                        amount = sliceCms[2];
+                        currency = sliceCms[3];
+                        logger.debug("send from comment to user " + toUser +  " amount " + amount);
+                    } else {
+                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                    }
                 } else {
-                    item.reply(TEXT.TIP_FAILED(botConfig.name));
+                    amount = sliceCms[1];
+                    currency = sliceCms[2];
+                    const author = await c.author;
+                    toUser = author.name;
+                    logger.info("tip from comment to user " + toUser + " amount " + amount);
                 }
             } else {
                 amount = splitCms[2];
@@ -207,11 +222,11 @@ async function processMention(item) {
                 item.reply(TEXT.INVALID_COMMAND(botConfig.name));
             }
         } else {
-            logger.debug("other case");
             item.reply(TEXT.INVALID_COMMAND(botConfig.name));
         }
+        
     } else {
-        item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+        logger.debug("comment mention is not a command");
     }
 }
 
@@ -267,7 +282,7 @@ async function processSendRequest(item) {
                 COMMANDS.SEND
             );
         } catch (error) {
-            logger.error("process send request error " + JSON.stringify(error));
+            logger.error("process send request error " + JSON.stringify(error) + error);
         }
     } else {
         await client.composeMessage({
@@ -283,11 +298,11 @@ async function processInfoRequest(item) {
     if (info) {
         const text = TEXT.INFO_REPLY(info.oneAddress, info.ethAddress, info.balance);
         const subject = "Your account info:";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     } else {
         const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
         const subject = "Help message";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     }
 }
 
@@ -296,11 +311,11 @@ async function processPrivateRequest(item){
     if (user) {
         const text = TEXT.PRIVATE_INFO(user.mnemonic);
         const subject = "Your private info:";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     } else {
         const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
         const subject = "Help message";
-        sendMessage(item.author.name, subject, text);
+        await sendMessage(item.author.name, subject, text);
     }
 }
 
@@ -324,12 +339,20 @@ async function processWithdrawRequest(item) {
             });
         } else {
             const txnHash = await transferOne(fromUserAddress, addressTo, amount);
-            const txLink = explorerLink + txnHash;
-            await client.composeMessage({
-                to: item.author.name,
-                subject: "Widthdraw result",
-                text: TEXT.WITHDRAW_SUCCESS(txLink)
-            });
+            if (txnHash){
+                const txLink = explorerLink + txnHash;
+                await client.composeMessage({
+                    to: item.author.name,
+                    subject: "Widthdraw result",
+                    text: TEXT.WITHDRAW_SUCCESS(txLink)
+                });
+            } else {
+                await client.composeMessage({
+                    to: item.author.name,
+                    subject: "Widthdraw result:",
+                    text: TEXT.WITHDRAW_FAILED
+                });
+            }
         }
         await saveLog(
             item.author.name.toLowerCase(),
@@ -352,7 +375,7 @@ async function processCreateRequest(item) {
     const user = await findOrCreate(item.author.name.toLowerCase());
     if (user) {
         const subject = "Your account info:";
-        sendMessage(item.author.name, subject, TEXT.CREATE_USER(user.oneAddress, user.ethAddress));
+        await sendMessage(item.author.name, subject, TEXT.CREATE_USER(user.oneAddress, user.ethAddress));
     }
 }
 
@@ -375,11 +398,15 @@ async function processComment(item){
         logger.debug("split cms " + splitCms);
         const command = botConfig.command;
         if (splitCms.findIndex((e) => e === command) > -1 || splitCms.findIndex((e => tokenCommands.includes(e)) > -1)){
-            // if (splitCms[0] === botConfig.command){
-            const log = await checkExistedInLog(item.id);
-            if (log){
-                logger.info("comment already processed");
+            let allowProcess = false;
+            if (Date.now()/1000 - item.created_utc > itemExpireTime){
+                logger.debug("need to check log in db");
+                const log = await checkExistedInLog(item.id);
+                allowProcess = log === null;
             } else {
+                allowProcess = true;
+            }
+            if (allowProcess){
                 const index = splitCms.findIndex((e) => e === command);
                 const indexTokenCommand = splitCms.findIndex((e => tokenCommands.includes(e)) > -1);
                 const sliceCms = index > -1 ? splitCms.slice(index) : splitCms.slice(indexTokenCommand);
@@ -428,10 +455,9 @@ async function processComment(item){
                     "ONE",
                     COMMANDS.TIP
                 );
+            } else {
+                logger.debug("comment item already process");
             }
-            // } else {
-            //     logger.debug("comment not valid command");
-            // }
         } else {
             logger.debug("comment not valid command");
         }
@@ -466,47 +492,48 @@ try {
     inbox.on("item", async function (item) {
         try {
             if (item.new) {
-                const log = await checkExistedInLog(item.id);
-                if (log) {
-                    logger.info("tip action already processed");
-                } else {
-                    if (item.was_comment) {
-                        processMention(item);
+                if (item.was_comment) {
+                    let allowProcess = false;
+                    if (Date.now()/1000 - item.created_utc > itemExpireTime){
+                        logger.debug("need to check log in db");
+                        const log = await checkExistedInLog(item.id);
+                        allowProcess = log ? false : true;
                     } else {
-                        logger.info(
-                            "process private message from " +
-                                item.author.name +
-                                " body " +
-                                item.body
-                        );
-                        if (
-                            item.body.toLowerCase() === COMMANDS.CREATE ||
-                            item.body.toLowerCase() === COMMANDS.REGISTER
-                        ) {
-                            processCreateRequest(item);
-                        } else if (item.body.toLowerCase() === COMMANDS.HELP) {
-                            returnHelp(item.author.name);
-                        } else if (item.body.toLowerCase().match(regexSend)) {
-                            processSendRequest(item);
-                        } else if (item.body.toLowerCase() === COMMANDS.INFO) {
-                            processInfoRequest(item);
-                        } else if (item.body.toLowerCase().match(regexWithdraw)) {
-                            processWithdrawRequest(item);
-                        } 
-                        // else if (item.body.toLowerCase() === "recovery") {
-                        //     processPrivateRequest(item);
-                        // }
-                        await item.markAsRead();
+                        allowProcess = true;
                     }
+                    if (allowProcess)
+                        processMention(item);
+                    else
+                        logger.debug("inbox item mention already processed");    
+                } else {
+                    logger.info("process private message from " + item.author.name + " body " + item.body);
+                    if (
+                        item.body.toLowerCase() === COMMANDS.CREATE ||
+                        item.body.toLowerCase() === COMMANDS.REGISTER
+                    ) {
+                        processCreateRequest(item);
+                    } else if (item.body.toLowerCase() === COMMANDS.HELP) {
+                        returnHelp(item.author.name);
+                    } else if (item.body.toLowerCase().match(regexSend)) {
+                        processSendRequest(item);
+                    } else if (item.body.toLowerCase() === COMMANDS.INFO) {
+                        processInfoRequest(item);
+                    } else if (item.body.toLowerCase().match(regexWithdraw)) {
+                        processWithdrawRequest(item);
+                    } 
+                    // else if (item.body.toLowerCase() === "recovery") {
+                    //     processPrivateRequest(item);
+                    // }
+                    await item.markAsRead();
                 }
             }
         } catch (error) {
-            logger.error("process item inbox error " + JSON.stringify(error));
+            logger.error("process item inbox error " + error);
         }
     });
 
     inbox.on("end", () => logger.info("Inbox subcribe ended!!!"));
 } catch (error){
-    logger.error("snoowrap error " + JSON.stringify(error));
+    logger.error("snoowrap error " + JSON.stringify(error) + error);
 }
 

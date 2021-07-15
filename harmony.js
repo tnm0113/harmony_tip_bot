@@ -49,18 +49,56 @@ async function transferOne(sendAddress, toAddress, amount) {
             gasPrice: new Unit("1").asGwei().toWei(),
         });
         const signedTxn = await account.signTransaction(txn);
-        // const txnHash = await hmy.blockchain.sendTransaction(signedTxn);
         const res = await sendTransaction(signedTxn);
-        const txnHash = res.txnHash;
-        // logger.info("txn hash " + txnHash.result);
-        // if (txnHash.error) {
-        //     logger.error("txn hash error " + JSON.stringify(txnHash));
-        //     return null;
-        // }
-        return txnHash.result;
+        logger.info("res send transaction " + JSON.stringify(res));
+        if (res.result) {
+            return res.txnHash;
+        } else {
+            logger.error("txn hash error " + res.mesg);
+            return null;
+        }
     } catch (err) {
         logger.error("transfer error " + JSON.stringify(err) + " " + err);
         return null;
+    }
+}
+
+export async function sendTransaction(signedTxn) {
+    try {
+        signedTxn
+            .observed()
+            .on("transactionHash", (txnHash) => {})
+            .on("confirmation", (confirmation) => {
+            if (confirmation !== "CONFIRMED")
+                throw new Error(
+                    "Transaction confirm failed. Network fee is not enough or something went wrong."
+                );
+            })
+            .on("error", (error) => {
+                throw new Error(error);
+            });
+    
+        logger.debug("send transaction");
+        const [sentTxn, txnHash] = await signedTxn.sendTransaction();
+        logger.debug("confirm transaction " + txnHash);
+        const confirmedTxn = await sentTxn.confirm(txnHash);
+    
+        if (confirmedTxn.isConfirmed()) {
+            return {
+                result: true,
+                txnHash: txnHash
+            };
+        } else {
+            return {
+                result: false,
+                mesg: "Can not confirm transaction " + txnHash,
+            };
+        }
+    } catch (err) {
+        return {
+            result: false,
+            mesg: err,
+        };
     }
 }
 
