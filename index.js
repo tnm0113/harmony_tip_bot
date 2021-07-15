@@ -388,7 +388,7 @@ async function processComment(item){
             " body " +
             item.body
     );        
-    // try {
+    try {
         let text = item.body
             .toLowerCase()
             .replace(/\n/g, " ")
@@ -461,9 +461,9 @@ async function processComment(item){
         } else {
             logger.debug("comment not valid command");
         }
-    // } catch (error){
-    //     logger.error("process comment error " + JSON.stringify(error) + " " + error);
-    // }    
+    } catch (error){
+        logger.error("process comment error " + JSON.stringify(error) + " " + error);
+    }    
 }
 
 try {
