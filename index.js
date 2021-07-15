@@ -21,11 +21,11 @@ const regexNumber = /^[0-9]*[.]?[0-9]{0,18}/g
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 const tokenCommands = tokens.tokens.map((token) => {
-    return token.command;
+    return token.tip_command;
 })
 
 function getTokenWithCommand(tokenCommand){
-    return tokens.tokens.filter((token) => token.command.toLowerCase() === tokenCommand.toLowerCase());
+    return tokens.tokens.filter((token) => token.tip_command.toLowerCase() === tokenCommand.toLowerCase());
 }
 
 function getTokenWithName(tokenName){
@@ -61,7 +61,7 @@ async function tip(fromUser, toUserName, amount, token) {
             toUserName +
             " amount " +
             amount +
-            " ONE"
+            token
     );
     try {
         const toUser = await findOrCreate(toUserName);
@@ -388,7 +388,7 @@ async function processComment(item){
             " body " +
             item.body
     );        
-    try {
+    // try {
         let text = item.body
             .toLowerCase()
             .replace(/\n/g, " ")
@@ -397,7 +397,7 @@ async function processComment(item){
         let splitCms  = text.split(/\s+/g);
         logger.debug("split cms " + splitCms);
         const command = botConfig.command;
-        if (splitCms.findIndex((e) => e === command) > -1 || splitCms.findIndex((e => tokenCommands.includes(e)) > -1)){
+        if (splitCms.findIndex((e) => e === command) > -1 || splitCms.findIndex((e) => tokenCommands.includes(e)) > -1){
             let allowProcess = false;
             if (Date.now()/1000 - item.created_utc > itemExpireTime){
                 logger.debug("need to check log in db");
@@ -408,7 +408,7 @@ async function processComment(item){
             }
             if (allowProcess){
                 const index = splitCms.findIndex((e) => e === command);
-                const indexTokenCommand = splitCms.findIndex((e => tokenCommands.includes(e)) > -1);
+                const indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
                 const sliceCms = index > -1 ? splitCms.slice(index) : splitCms.slice(indexTokenCommand);
                 const token = index > -1 ? getTokenWithCommand(command)[0] : getTokenWithCommand(splitCms[indexTokenCommand])[0];
                 console.log("sliceCms ", sliceCms);
@@ -461,9 +461,9 @@ async function processComment(item){
         } else {
             logger.debug("comment not valid command");
         }
-    } catch (error){
-        logger.error("process comment error " + JSON.stringify(error) + " " + error);
-    }    
+    // } catch (error){
+    //     logger.error("process comment error " + JSON.stringify(error) + " " + error);
+    // }    
 }
 
 try {

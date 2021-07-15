@@ -63,45 +63,6 @@ async function transferOne(sendAddress, toAddress, amount) {
     }
 }
 
-export async function sendTransaction(signedTxn) {
-    try {
-        signedTxn
-            .observed()
-            .on("transactionHash", (txnHash) => {})
-            .on("confirmation", (confirmation) => {
-            if (confirmation !== "CONFIRMED")
-                throw new Error(
-                    "Transaction confirm failed. Network fee is not enough or something went wrong."
-                );
-            })
-            .on("error", (error) => {
-                throw new Error(error);
-            });
-    
-        logger.debug("send transaction");
-        const [sentTxn, txnHash] = await signedTxn.sendTransaction();
-        logger.debug("confirm transaction " + txnHash);
-        const confirmedTxn = await sentTxn.confirm(txnHash);
-    
-        if (confirmedTxn.isConfirmed()) {
-            return {
-                result: true,
-                txnHash: txnHash
-            };
-        } else {
-            return {
-                result: false,
-                mesg: "Can not confirm transaction " + txnHash,
-            };
-        }
-    } catch (err) {
-        return {
-            result: false,
-            mesg: err,
-        };
-    }
-}
-
 async function getAccountBalance(address) {
     try {
         // const account = hmy.wallet.addByMnemonic(mnemonic);
