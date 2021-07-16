@@ -32,11 +32,11 @@ export const TIP_FAILED = () => {
 //Info Reply:    
 //(Current is good. Leave as-is)
 export const INFO_REPLY = (one, eth, balance) => {
-    return `One Address: ${one}` +
+    return `This is your One Address: ${one}` +
             `\n \n ` +
-            `Eth Address: ${eth}` +
+            `And this is your Eth Address: ${eth}` +
             `\n \n` +
-            `Balance:  ${balance}` +
+            `Your Balance:  [${balance}](https://explorer.harmony.one/address/${one})` +
             ` ONE.${SIGNATURE(botConfig.name)}`;
 }
       
@@ -83,9 +83,10 @@ export const HELP_TEXT = () => {
 }
 
 export const CREATE_USER = (oneAddress, ethAddress) => {
-    return `One Address:  ${oneAddress}` +
+    return  `A bladder/wallet has been created for you.\n\n` +
+            `One Address:  ${oneAddress}` +
             `\n \n` +
-           `Eth Address:  ${ethAddress}.${SIGNATURE(botConfig.name)}`;
+            `Eth Address:  ${ethAddress}.${SIGNATURE(botConfig.name)}`;
 }
 
 export const TOKEN_NOT_SUPPORT = (currency) => {
