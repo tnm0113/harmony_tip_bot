@@ -101,11 +101,11 @@ export async function sendTransaction(signedTxn) {
             .on("confirmation", (confirmation) => {
             if (confirmation !== "CONFIRMED")
                 throw new Error(
-                "Transaction confirm failed. Network fee is not enough or something went wrong."
+                    "Transaction confirm failed. Network fee is not enough or something went wrong."
                 );
             })
             .on("error", (error) => {
-            throw new Error(error);
+                throw new Error(error);
             });
     
         const [sentTxn, txnHash] = await signedTxn.sendTransaction();

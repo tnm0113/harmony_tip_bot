@@ -12,7 +12,8 @@ import {
     addAllAccounts,
     transferToken
 } from "./harmony.js";
-import * as TEXT from "./text.js";
+// import * as TEXT from "./text.js";
+import * as TEXT from "./text_pee.js";
 
 const regexSend = /send\s(.*)/g;
 const regexWithdraw = /withdraw\s(.*)/g;
@@ -61,7 +62,7 @@ async function tip(fromUser, toUserName, amount, token) {
             toUserName +
             " amount " +
             amount +
-            token
+            token.name
     );
     try {
         const toUser = await findOrCreate(toUserName);
@@ -168,7 +169,7 @@ async function processMention(item) {
                         currency = sliceCms[3];
                         logger.debug("send from comment to user " + toUser +  " amount " + amount);
                     } else {
-                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                        item.reply(TEXT.TIP_FAILED());
                     }
                 } else {
                     amount = sliceCms[1];
@@ -187,7 +188,7 @@ async function processMention(item) {
             if (amount.match(regexNumber)){
                 amount = parseFloat(amount);
             } else {
-                item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                item.reply(TEXT.INVALID_COMMAND());
                 return;
             }
             // if (currency.toLowerCase() != "one"){
@@ -202,13 +203,13 @@ async function processMention(item) {
                     const txnHash = await tip(sendUser, toUser, amount, token);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
-                        item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
+                        item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink, token.name));
                     } else {
                         logger.error("tip failed");
-                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                        item.reply(TEXT.TIP_FAILED());
                     }
                 } else {
-                    item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+                    item.reply(TEXT.ACCOUNT_NOT_EXISTED());
                 }
                 await saveLog(
                     item.author.name,
@@ -219,10 +220,10 @@ async function processMention(item) {
                     COMMANDS.TIP
                 );
             } else {
-                item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                item.reply(TEXT.TOKEN_NOT_SUPPORT(currency));
             }
         } else {
-            item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+            item.reply(TEXT.INVALID_COMMAND());
         }
         
     } else {
@@ -242,36 +243,33 @@ async function processSendRequest(item) {
             const currency = splitBody[2];
             const toUser = splitBody[3].match(regexUser) ? splitBody[3].replace("/u/","").replace("u/","") : splitBody[3];
             const fromUser = await findUser(item.author.name.toLowerCase());
-            if (currency.toLowerCase() != "one"){
-                await client.composeMessage({
-                    to: item.author.name,
-                    subject: "Send result",
-                    text:"Tip bot only support ONE currently !!"
-                });
-            } else {
+            const token = getTokenWithName(currency)[0] || null;
+            if (token){
                 if (fromUser) {
-                    const txnHash = await tip(fromUser, toUser, amount);
+                    const txnHash = await tip(fromUser, toUser, amount, token);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result",
-                            text: TEXT.TIP_SUCCESS(amount, toUser, txLink)
+                            text: TEXT.TIP_SUCCESS(amount, toUser, txLink, token.name)
                         });
                     } else {
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result:",
-                            text: TEXT.TIP_FAILED(botConfig.name)
+                            text: TEXT.TIP_FAILED()
                         });
                     }
                 } else {
                     await client.composeMessage({
                         to: item.author.name,
                         subject: "Send result:",
-                        text: TEXT.ACCOUNT_NOT_EXISTED(botConfig.name)
+                        text: TEXT.ACCOUNT_NOT_EXISTED()
                     });
                 }
+            } else {
+                item.reply(TEXT.TOKEN_NOT_SUPPORT(currency));
             }
             await saveLog(
                 item.author.name.toLowerCase(),
@@ -288,7 +286,7 @@ async function processSendRequest(item) {
         await client.composeMessage({
             to: item.author.name,
             subject: "Widthdraw result",
-            text: TEXT.INVALID_COMMAND(botConfig.name)
+            text: TEXT.INVALID_COMMAND()
         });
     }
 }
@@ -300,7 +298,7 @@ async function processInfoRequest(item) {
         const subject = "Your account info:";
         await sendMessage(item.author.name, subject, text);
     } else {
-        const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
+        const text = TEXT.ACCOUNT_NOT_EXISTED();
         const subject = "Help message";
         await sendMessage(item.author.name, subject, text);
     }
@@ -313,7 +311,7 @@ async function processPrivateRequest(item){
         const subject = "Your private info:";
         await sendMessage(item.author.name, subject, text);
     } else {
-        const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
+        const text = TEXT.ACCOUNT_NOT_EXISTED();
         const subject = "Help message";
         await sendMessage(item.author.name, subject, text);
     }
@@ -331,14 +329,13 @@ async function processWithdrawRequest(item) {
         const addressTo = splitBody[3];
         const user = await findUser(item.author.name.toLowerCase());
         const fromUserAddress = user.ethAddress;
-        if (currency != "one"){
-            await client.composeMessage({
-                to: item.author.name,
-                subject: "Widthdraw result",
-                text:"Tip bot only support ONE currently !!"
-            });
-        } else {
-            const txnHash = await transferOne(fromUserAddress, addressTo, amount);
+        const token = getTokenWithName(currency)[0] || null;
+        if (token){
+            let txnHash;
+            if (currency === "one")
+                txnHash = await transferOne(fromUserAddress, addressTo, amount);
+            else 
+                txnHash = await transferToken(token.contract_address, amount, addressTo, user.ethAddress);
             if (txnHash){
                 const txLink = explorerLink + txnHash;
                 await client.composeMessage({
@@ -353,6 +350,12 @@ async function processWithdrawRequest(item) {
                     text: TEXT.WITHDRAW_FAILED
                 });
             }
+        } else {
+            await client.composeMessage({
+                to: item.author.name,
+                subject: "Widthdraw result:",
+                text: TEXT.TOKEN_NOT_SUPPORT(currency)
+            });
         }
         await saveLog(
             item.author.name.toLowerCase(),
@@ -366,7 +369,7 @@ async function processWithdrawRequest(item) {
         await client.composeMessage({
             to: item.author.name,
             subject: "Widthdraw result",
-            text: TEXT.INVALID_COMMAND(botConfig.name)
+            text: TEXT.INVALID_COMMAND()
         });
     }
 }
@@ -414,7 +417,7 @@ async function processComment(item){
                 console.log("sliceCms ", sliceCms);
                 if (sliceCms.length < 2){
                     logger.debug("comment not valid command");
-                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    item.reply(TEXT.INVALID_COMMAND());
                     return;
                 }
                 const sendUserName = item.author.name.toLowerCase();
@@ -422,7 +425,7 @@ async function processComment(item){
                 if (amount.match(regexNumber)){
                     amount = parseFloat(amount);
                 } else {
-                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    item.reply(TEXT.INVALID_COMMAND());
                     return;
                 }
                 let toUserName = "";
@@ -439,13 +442,13 @@ async function processComment(item){
                     const txnHash = await tip(sendUser, toUserName, amount, token);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
-                        item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink));
+                        item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink, token.name));
                     } else {
                         logger.error("tip failed");
-                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                        item.reply(TEXT.TIP_FAILED());
                     }
                 } else {
-                    item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+                    item.reply(TEXT.ACCOUNT_NOT_EXISTED());
                 }
                 await saveLog(
                     sendUserName,
