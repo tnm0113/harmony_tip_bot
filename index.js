@@ -393,8 +393,10 @@ async function processComment(item){
                     return;
                 }
                 let toUserName = "";
+                logger.debug("find user " + sendUserName);
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
+                    logger.debug("get user sucess, start get parent comment");
                     const parentComment = client.getComment(item.parent_id);
                     toUserName = await parentComment.author.name;
                     toUserName = toUserName.toLowerCase();
@@ -403,6 +405,7 @@ async function processComment(item){
                             toUserName = sliceCms[2].replace("/u/","").replace("u/","");
                         }
                     }
+                    logger.debug("start tip");
                     const txnHash = await tip(sendUser, toUserName, amount);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
