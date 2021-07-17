@@ -398,6 +398,7 @@ async function processComment(item){
                 if (sendUser){
                     logger.debug("get user sucess, start get parent comment");
                     const parentComment = client.getComment(item.parent_id);
+                    logger.debug("get parent comment done, get author name");
                     toUserName = await parentComment.author.name;
                     toUserName = toUserName.toLowerCase();
                     if (sliceCms.length > 2){
