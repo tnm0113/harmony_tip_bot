@@ -396,10 +396,11 @@ async function processComment(item){
                 logger.debug("find user " + sendUserName);
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
-                    logger.debug("get user sucess, start get parent comment");
-                    const parentComment = client.getComment(item.parent_id);
-                    logger.debug("get parent comment done, get author name");
-                    toUserName = await parentComment.author.name;
+                    logger.debug("get user sucess, start get parent comment author");
+                    // const parentComment = client.getComment(item.parent_id);
+                    toUserName = await client.getComment(item.parent_id).author.name;
+                    logger.debug("get parent comment author name done");
+                    // toUserName = await parentComment.author.name;
                     toUserName = toUserName.toLowerCase();
                     if (sliceCms.length > 2){
                         if (sliceCms[2].match(regexUser)){
