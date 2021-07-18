@@ -37,7 +37,7 @@ export const INFO_REPLY = (one, eth, balance) => {
             `And this is your Eth Address: ${eth}` +
             `\n \n` +
             `Your Balance:  [${balance}](https://explorer.harmony.one/address/${one})` +
-            ` ONE.${SIGNATURE(botConfig.name)}`;
+            `.${SIGNATURE(botConfig.name)}`;
 }
       
 //Withdraw Reply:    

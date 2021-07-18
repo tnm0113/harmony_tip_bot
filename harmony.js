@@ -77,6 +77,22 @@ async function getAccountBalance(address) {
     }
 }
 
+async function getTokenBalance(contractAddress, userAddress){
+    try {
+        const contract = getContractInstance(contractAddress);
+        const weiBalance = await contract.methods.balanceOf(userAddress).call();
+        const hexDecimals = await contract.methods.decimals().call();
+        const decimals = new BN(hexDecimals, 16).toNumber();
+      
+        const rs = BigNumber(weiBalance)
+                      .dividedBy(Math.pow(10, decimals))
+                      .toFixed();
+        return rs;
+      } catch (error) {
+        console.log("error ", error);
+      }
+}
+
 function createAccount() {
     const mnemonic = Wallet.generateMnemonic();
     const account = hmy.wallet.addByMnemonic(mnemonic);
@@ -173,4 +189,4 @@ async function transferToken(contractAddress, amount, toHex, fromHex){
     }
 }
 
-export { transferOne, getAccountBalance, createAccount, addAllAccounts, transferToken };
+export { transferOne, getAccountBalance, createAccount, addAllAccounts, transferToken, getTokenBalance };

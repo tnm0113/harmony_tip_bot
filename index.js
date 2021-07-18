@@ -10,7 +10,8 @@ import {
     getAccountBalance,
     createAccount,
     addAllAccounts,
-    transferToken
+    transferToken,
+    getTokenBalance
 } from "./harmony.js";
 // import * as TEXT from "./text.js";
 import * as TEXT from "./text_pee.js";
@@ -85,7 +86,11 @@ async function getBalance(username) {
     try {
         const user = await findUser(username);
         if (user) {
-            const b = await getAccountBalance(user.ethAddress);
+            // const b = await getAccountBalance(user.ethAddress);
+            let b = "";
+            for (const token of tokens.tokens){
+                b += await getBalanceOf(token, user);
+            }
             return {
                 oneAddress: user.oneAddress,
                 ethAddress: user.ethAddress,
@@ -96,6 +101,16 @@ async function getBalance(username) {
         }
     } catch (error) {
         logger.error("get balance error " + JSON.stringify(error) + error);
+    }
+}
+
+async function getBalanceOf(token, user){
+    if (token.name === "ONE"){
+        const balanceOne = await getAccountBalance(user.ethAddress);    
+        return `${balanceOne} ONE `;
+    } else {
+        const balanceToken = await getTokenBalance(token.contract_address, user.ethAddress);
+        return `${balanceToken} ${token.name} `;
     }
 }
 
