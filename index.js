@@ -69,7 +69,7 @@ async function tip(fromUser, toUserName, amount, token) {
         const toUser = await findOrCreate(toUserName);
         const addressTo = toUser.oneAddress;
         const fromUserAddress = fromUser.ethAddress;
-        if (token.name === "one"){
+        if (token.name.toLowerCase() === "one"){
             const hash = await transferOne(fromUserAddress, addressTo, amount);
             return hash;
         } else {
@@ -446,8 +446,8 @@ async function processComment(item){
                 let toUserName = "";
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
-                    const parentComment = client.getComment(item.parent_id);
-                    toUserName = await parentComment.author.name;
+                    // const parentComment = client.getComment(item.parent_id);
+                    toUserName = await client.getComment(item.parent_id).author.name;
                     toUserName = toUserName.toLowerCase();
                     if (sliceCms.length > 2){
                         if (sliceCms[2].match(regexUser)){
