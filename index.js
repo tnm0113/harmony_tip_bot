@@ -107,10 +107,10 @@ async function getBalance(username) {
 async function getBalanceOf(token, user){
     if (token.name === "ONE"){
         const balanceOne = await getAccountBalance(user.ethAddress);    
-        return `ONE | ${balanceOne} \n\n`;
+        return `| ONE | ${balanceOne} |\n\n`;
     } else {
         const balanceToken = await getTokenBalance(token.contract_address, user.ethAddress);
-        return `${token.name} | ${balanceToken} \n\n`;
+        return `| ${token.name} | ${balanceToken} |\n\n`;
     }
 }
 
