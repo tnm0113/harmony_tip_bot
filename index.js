@@ -3,7 +3,10 @@ import Snoowrap from "snoowrap";
 import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
 import { logger } from "./logger.js";
 import { COMMANDS } from "./const.js";
-import tokens from "./tokens.json";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const tokens = require("./tokens.json");
+// import tokens from "./tokens.json";
 import config from "config";
 import {
     transferOne,

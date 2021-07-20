@@ -6,7 +6,10 @@ import { getAllUser } from "./db.js";
 import config from "config";
 import BN from "bn.js";
 import BigNumber from "bignumber.js";
-import artifacts from "./artifacts.json"; 
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const artifacts = require("./artifacts.json");
+// import artifacts from "./artifacts.json"; 
 
 const botConfig = config.get("bot");
 
