@@ -43,7 +43,7 @@ async function transfer(sendAddress, toAddress, amount) {
             gasLimit: "21000",
             shardID: 0,
             toShardID: 0,
-            gasPrice: new Unit("1").asGwei().toWei(),
+            gasPrice: new Unit("2").asGwei().toWei(),
         });
         const signedTxn = await account.signTransaction(txn);
         const res = await sendTransaction(signedTxn);
