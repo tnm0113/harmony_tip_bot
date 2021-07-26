@@ -1,7 +1,8 @@
-import { ChainID, ChainType, Unit } from "@harmony-js/utils";
+import { ChainID, ChainType, Unit, hexToNumber } from "@harmony-js/utils";
 import { Harmony } from "@harmony-js/core";
 import { logger } from "./logger.js";
 import { Wallet } from "@harmony-js/account";
+import { RPCMethod } from "@harmony-js/network";
 import { getAllUser } from "./db.js";
 import config from "config";
 
@@ -15,6 +16,8 @@ const hmy = new Harmony(blockChainUrl, {
     chainId: chainId,
 });
 
+const mapAccountNonce = new Map();
+
 async function addAllAccounts(){
     const users = await getAllUser();
     users.forEach((user) => {
@@ -23,6 +26,7 @@ async function addAllAccounts(){
     hmy.wallet.accounts.forEach(addr => {
         const account = hmy.wallet.getAccount(addr);
         logger.debug("one address " + account.bech32Address + " eth " + account.address);
+        mapAccountNonce.set(account.address, 0);
     });
 }
 
@@ -37,15 +41,34 @@ async function transfer(sendAddress, toAddress, amount) {
     );
     try {
         const account = hmy.wallet.getAccount(sendAddress);
+        // const nonce = await account.getShardNonce(0);
+        let nonce = 0;
+        if (mapAccountNonce.get(sendAddress) === 0){
+            const data = await hmy.messenger.send(
+                RPCMethod.GetTransactionCount,
+                [sendAddress, 'latest'],
+                hmy.messenger.chainPrefix,
+                0,
+            );
+            logger.debug('data ' + JSON.stringify(data));
+            nonce = Number.parseInt(hexToNumber(data.result), 10);
+        } else {
+            nonce = mapAccountNonce.get(sendAddress) + 1;
+        }
+        mapAccountNonce.set(sendAddress, nonce);
+        logger.debug("account nonce " + nonce);
         const txn = hmy.transactions.newTx({
+            nonce: nonce,
             to: toAddress,
             value: new Unit(parseFloat(amount)).asOne().toWei(),
             gasLimit: "21000",
             shardID: 0,
             toShardID: 0,
-            gasPrice: new Unit("1").asGwei().toWei(),
+            gasPrice: new Unit("2").asGwei().toWei(),
         });
-        const signedTxn = await account.signTransaction(txn);
+        const signedTxn = await account.signTransaction(txn, false);
+        const tx = hmy.transactions.recover(signedTxn.getRawTransaction());
+        logger.debug('tx ' + JSON.stringify(tx));
         const res = await sendTransaction(signedTxn);
         logger.info("res send transaction " + JSON.stringify(res));
         if (res.result) {
@@ -66,11 +89,13 @@ export async function sendTransaction(signedTxn) {
             .observed()
             .on("transactionHash", (txnHash) => {})
             .on("confirmation", (confirmation) => {
-            if (confirmation !== "CONFIRMED")
+                logger.debug("confirmation " + confirmation);
+                if (confirmation !== "CONFIRMED")
                 throw new Error(
                     "Transaction confirm failed. Network fee is not enough or something went wrong."
                 );
-            })
+            }
+            )
             .on("error", (error) => {
                 throw new Error(error);
             });
