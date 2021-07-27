@@ -192,19 +192,19 @@ async function transferToken(contractAddress, amount, toHex, fromHex){
         const gasLimit = "250000";
         const gasPrice = 1;
         let nonce = 0;
-        if (mapAccountNonce.get(sendAddress) === 0){
+        if (mapAccountNonce.get(fromHex) === 0){
             const data = await hmy.messenger.send(
                 RPCMethod.GetTransactionCount,
-                [sendAddress, 'latest'],
+                [fromHex, 'latest'],
                 hmy.messenger.chainPrefix,
                 0,
             );
             logger.debug('data ' + JSON.stringify(data));
             nonce = Number.parseInt(hexToNumber(data.result), 10);
         } else {
-            nonce = mapAccountNonce.get(sendAddress) + 1;
+            nonce = mapAccountNonce.get(fromHex) + 1;
         }
-        mapAccountNonce.set(sendAddress, nonce);
+        mapAccountNonce.set(fromHex, nonce);
         logger.debug("account nonce " + nonce);
         const txn = await contract.methods.transfer(toHex, weiAmount).createTransaction();
         txn.setParams({
