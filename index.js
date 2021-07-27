@@ -196,7 +196,6 @@ async function processMention(item) {
                     toUser = author.name;
                     logger.info("tip from comment to user " + toUser + " amount " + amount);
                 }
-<<<<<<< HEAD
             } else {
                 amount = splitCms[2];
                 currency = splitCms[3];
@@ -217,19 +216,6 @@ async function processMention(item) {
             const token = getTokenWithName(currency)[0] || null;
             if (token){
                 const sendUserName = await item.author.name.toLowerCase();
-=======
-                if (amount.match(regexNumber)){
-                    amount = parseFloat(amount);
-                } else {
-                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
-                    return;
-                }
-                if (currency.toLowerCase() != "one"){
-                    item.reply("Tip bot only support ONE currently !!!");
-                    return;
-                }
-                const sendUserName = item.author.name.toLowerCase();
->>>>>>> master
                 const sendUser = await findUser(sendUserName);
                 if (sendUser) {
                     const txnHash = await tip(sendUser, toUser, amount, token);
