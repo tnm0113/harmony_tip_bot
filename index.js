@@ -196,6 +196,7 @@ async function processMention(item) {
                     toUser = author.name;
                     logger.info("tip from comment to user " + toUser + " amount " + amount);
                 }
+<<<<<<< HEAD
             } else {
                 amount = splitCms[2];
                 currency = splitCms[3];
@@ -216,6 +217,19 @@ async function processMention(item) {
             const token = getTokenWithName(currency)[0] || null;
             if (token){
                 const sendUserName = await item.author.name.toLowerCase();
+=======
+                if (amount.match(regexNumber)){
+                    amount = parseFloat(amount);
+                } else {
+                    item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    return;
+                }
+                if (currency.toLowerCase() != "one"){
+                    item.reply("Tip bot only support ONE currently !!!");
+                    return;
+                }
+                const sendUserName = item.author.name.toLowerCase();
+>>>>>>> master
                 const sendUser = await findUser(sendUserName);
                 if (sendUser) {
                     const txnHash = await tip(sendUser, toUser, amount, token);
@@ -447,17 +461,22 @@ async function processComment(item){
                     return;
                 }
                 let toUserName = "";
+                logger.debug("find user " + sendUserName);
                 const sendUser = await findUser(sendUserName);
                 if (sendUser){
+                    logger.debug("get user sucess, start get parent comment author");
                     // const parentComment = client.getComment(item.parent_id);
                     toUserName = await client.getComment(item.parent_id).author.name;
+                    logger.debug("get parent comment author name done");
+                    // toUserName = await parentComment.author.name;
                     toUserName = toUserName.toLowerCase();
                     if (sliceCms.length > 2){
                         if (sliceCms[2].match(regexUser)){
                             toUserName = sliceCms[2].replace("/u/","").replace("u/","");
                         }
                     }
-                    const txnHash = await tip(sendUser, toUserName, amount, token);
+                    logger.debug("start tip");
+                    const txnHash = await tip(sendUser, toUserName, amount);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
                         item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink, token.name));
