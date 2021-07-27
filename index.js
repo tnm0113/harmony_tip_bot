@@ -462,7 +462,7 @@ async function processComment(item){
                         }
                     }
                     logger.debug("start tip");
-                    const txnHash = await tip(sendUser, toUserName, amount);
+                    const txnHash = await tip(sendUser, toUserName, amount, token);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
                         item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink, token.name));
