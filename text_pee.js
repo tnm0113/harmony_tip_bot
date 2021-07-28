@@ -69,7 +69,7 @@ export const PRIVATE_INFO = (mnemonic) => {
 export const SIGNATURE = (tip_bot_name) => {
     const base = "\n\n*****\n\n";
     const emojii = "♡ (っ◔◡◔)っ ♡";
-    const get_started = ` | [Get Started](https://www.reddit.com/r/harmony_one/wiki/harmonytipbot)`;
+    const get_started = ` | [Get Started](https://www.reddit.com/r/AltStreetBets/about/wiki/peeing_bot-hrc20_tipping)`;
     const show_balance = ` | [Show my balance](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
     const end = " | ♡";
     return base + emojii + get_started +  show_balance + end;
@@ -79,8 +79,8 @@ export const HELP_TEXT = () => {
     return `Commands supported via Private Message: \n\n` +
     `- 'info' - Retrieve your account info.\n\n` +
     `- 'create' or 'register' - Create a new account if one does not exist.\n\n` +
-    `- 'send <amount> ONE <user>' - Send ONE to a reddit user.\n\n` +
-    `- 'withdraw <amount> ONE <address>' - Withdraw ONE to an address.\n\n` +
+    `- 'send <amount> <currency> <user>' - Send some ONE or PEE to a reddit user.\n\n` +
+    `- 'withdraw <amount> <currency> <address>' - Withdraw ONE or PEE to an address.\n\n` +
     `- 'help' - Get this help message.`+
     `${SIGNATURE(botConfig.name)}`;
 }
