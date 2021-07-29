@@ -1,5 +1,6 @@
 import config from "config";
 const botConfig = config.get("bot");
+const wiki_link = botConfig.wiki_link || "https://www.reddit.com/r/AltStreetBets/wiki/peeing_bot-hrc20_tipping";
 
 const linkPmReddit = (subject, action) => {
     return `https://www.reddit.com/message/compose/?to=${botConfig.name}&subject=${subject}&message=${action}`;
@@ -69,7 +70,7 @@ export const PRIVATE_INFO = (mnemonic) => {
 export const SIGNATURE = (tip_bot_name) => {
     const base = "\n\n*****\n\n";
     const emojii = "♡ (っ◔◡◔)っ ♡";
-    const get_started = ` | [Get Started](https://www.reddit.com/r/AltStreetBets/about/wiki/peeing_bot-hrc20_tipping)`;
+    const get_started = ` | [Get Started](${wiki_link})`;
     const show_balance = ` | [Show my balance](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
     const end = " | ♡";
     return base + emojii + get_started +  show_balance + end;
