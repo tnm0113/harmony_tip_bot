@@ -18,6 +18,8 @@ const regexNumber = /^[0-9]*[.]?[0-9]{0,18}/g
 const snoowrapConfig = config.get("snoowrap");
 const botConfig = config.get("bot");
 const itemExpireTime = botConfig.item_expire_time || 60;
+const inbox_poll_time = botConfig.inbox_poll_time || 10000;
+const comment_poll_time = botConfig.comment_poll_time || 5000;
 
 const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
@@ -443,14 +445,14 @@ try {
 
     const inbox = new InboxStream(client, {
         filter: "mentions" | "messages",
-        limit: 10,
-        pollTime: 2000,
+        limit: 50,
+        pollTime: inbox_poll_time,
     });
 
     const comments = new CommentStream(client, {
         subreddit: botConfig.subreddit,
-        limit: 10,
-        pollTime: 2000,
+        limit: 30,
+        pollTime: comment_poll_time,
     })
 
     comments.on("item", async function(item){
