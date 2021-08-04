@@ -37,13 +37,15 @@ function getTokenWithName(tokenName){
     return tokens.tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
 }
 const itemExpireTime = botConfig.item_expire_time || 60;
+const inbox_poll_time = botConfig.inbox_poll_time || 10000;
+const comment_poll_time = botConfig.comment_poll_time || 5000;
 
 const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
 const client = new Snoowrap(snoowrapConfig);
 client.config({
     requestDelay: botConfig.request_delay || 0,
-    continueAfterRatelimitError: true,
+    // continueAfterRatelimitError: true,
     maxRetryAttempts: 5,
     debug: botConfig.snoowrap_debug,
     logger: logger,
@@ -497,14 +499,14 @@ try {
 
     const inbox = new InboxStream(client, {
         filter: "mentions" | "messages",
-        limit: 10,
-        pollTime: 2000,
+        limit: 50,
+        pollTime: inbox_poll_time,
     });
 
     const comments = new CommentStream(client, {
         subreddit: botConfig.subreddit,
-        limit: 10,
-        pollTime: 2000,
+        limit: 30,
+        pollTime: comment_poll_time,
     })
 
     comments.on("item", async function(item){
