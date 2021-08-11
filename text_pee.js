@@ -96,3 +96,7 @@ export const CREATE_USER = (oneAddress, ethAddress) => {
 export const TOKEN_NOT_SUPPORT = (currency) => {
     return `Tip bot havent support ${currency} yet`;
 }
+
+export const FUEL_SUCCESS = (txlink) => {
+    return `You have received some gas! Transaction ID [HERE](${txlink}).${SIGNATURE(botConfig.name)}`
+}

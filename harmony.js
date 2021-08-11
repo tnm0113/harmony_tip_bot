@@ -16,6 +16,7 @@ const botConfig = config.get("bot");
 
 const blockChainUrl = botConfig.mainnet ? "https://api.s0.t.hmny.io/" : "https://api.s0.b.hmny.io/";
 const chainId = botConfig.mainnet ? ChainID.HmyMainnet : ChainID.HmyTestnet;
+const botWalletSeed = botConfig.wallet_seed;
 
 const hmy = new Harmony(blockChainUrl, {
     chainType: ChainType.Harmony,
@@ -29,6 +30,10 @@ async function addAllAccounts(){
     users.forEach((user) => {
         hmy.wallet.addByMnemonic(user.mnemonic);
     })
+    if (botWalletSeed){
+        logger.debug("add bot wallet");
+        hmy.wallet.addByMnemonic(botWalletSeed);
+    }
     hmy.wallet.accounts.forEach(addr => {
         const account = hmy.wallet.getAccount(addr);
         logger.debug("one address " + account.bech32Address + " eth " + account.address);

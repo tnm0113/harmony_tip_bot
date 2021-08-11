@@ -39,6 +39,8 @@ function getTokenWithName(tokenName){
 const itemExpireTime = botConfig.item_expire_time || 60;
 const inbox_poll_time = botConfig.inbox_poll_time || 10000;
 const comment_poll_time = botConfig.comment_poll_time || 5000;
+const botWalletAddress = botConfig.wallet_address;
+const defaultGasForNewUser = botConfig.gas_for_new || 0.000021 * 25;
 
 const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 
@@ -127,6 +129,8 @@ async function findOrCreate(username) {
         } else {
             const blockchainInfo = createAccount();
             logger.debug("blockchainInfo " + JSON.stringify(blockchainInfo));
+            const hash = await transferOne(botWalletAddress, blockchainInfo.ethAddress, defaultGasForNewUser);
+            logger.debug("send gas to new user hash " + hash);
             return createUser(
                 username,
                 blockchainInfo.ethAddress,
@@ -494,6 +498,21 @@ async function processComment(item){
     }    
 }
 
+async function processFuelRequest(item){
+    const user = await findUser(item.author.name.toLowerCase());
+    if (user) {
+        const hash = await transferOne(botWalletAddress, user.ethAddress, defaultGasForNewUser);
+        logger.debug("send gas to new user hash on fuel request " + hash);
+        const text = TEXT.FUEL_SUCCESS(hash);
+        const subject = "Help message";
+        await sendMessage(item.author.name, subject, text);
+    } else {
+        const text = TEXT.ACCOUNT_NOT_EXISTED();
+        const subject = "Help message";
+        await sendMessage(item.author.name, subject, text);
+    }
+}
+
 try {
     addAllAccounts();
 
@@ -548,7 +567,9 @@ try {
                         processInfoRequest(item);
                     } else if (item.body.toLowerCase().match(regexWithdraw)) {
                         processWithdrawRequest(item);
-                    } 
+                    } else if (item.body.toLowerCase() === COMMANDS.INFO) {
+                        processFuelRequest(item);
+                    }
                     // else if (item.body.toLowerCase() === "recovery") {
                     //     processPrivateRequest(item);
                     // }

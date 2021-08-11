@@ -6,5 +6,6 @@ export const COMMANDS = {
     TIP: "tip",
     RECOVERY: "recovery",
     CREATE: "create",
-    REGISTER: "register"
+    REGISTER: "register",
+    FUEL: "fuel"
 }
