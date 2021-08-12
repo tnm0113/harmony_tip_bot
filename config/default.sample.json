@@ -1,0 +1,27 @@
+{
+  "snoowrap": {
+    "clientId": "",
+    "clientSecret": "",
+    "password": "",
+    "username": "tnm_tip_bot",
+    "userAgent": "Tnm Bot 0.6"
+  },
+  "bot": {
+    "name": "tnm_tip_bot",
+    "subreddit": "TestPeeBot",
+    "command": "!one",
+    "mainnet": true,
+    "wiki_link": "https://www.reddit.com/r/AltStreetBets/wiki/peeing_bot-hrc20_tipping"
+  },
+  "logger": {
+    "dir": "log",
+    "file": {
+      "level": "debug",
+      "maxSize": "5242880",
+      "maxFiles": "5"
+    },
+    "console": {
+      "level": "debug"
+    }
+  }
+}

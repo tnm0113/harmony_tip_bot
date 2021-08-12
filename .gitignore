@@ -3,4 +3,4 @@ credentials.js
 *.sqlite
 build/
 log/
-config/
+config/default.json
