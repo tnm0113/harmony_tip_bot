@@ -129,7 +129,7 @@ async function findOrCreate(username) {
         } else {
             const blockchainInfo = createAccount();
             logger.debug("blockchainInfo " + JSON.stringify(blockchainInfo));
-            const hash = await transferOne(botWalletAddress, blockchainInfo.ethAddress, defaultGasForNewUser);
+            const hash = await transferOne(botWalletAddress, blockchainInfo.oneAddress, defaultGasForNewUser);
             logger.debug("send gas to new user hash " + hash);
             return createUser(
                 username,
@@ -503,7 +503,7 @@ async function processFuelRequest(item){
     if (user) {
         const balanceOne = await getAccountBalance(user.ethAddress);
         if (balanceOne < defaultGasForNewUser){
-            const hash = await transferOne(botWalletAddress, user.ethAddress, defaultGasForNewUser);
+            const hash = await transferOne(botWalletAddress, user.oneAddress, defaultGasForNewUser);
             logger.debug("send gas to new user hash on fuel request " + hash);
             const text = TEXT.FUEL_SUCCESS(hash);
             const subject = "Fuel result";
