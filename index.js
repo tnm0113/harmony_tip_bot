@@ -502,7 +502,7 @@ async function processFuelRequest(item){
     const user = await findUser(item.author.name.toLowerCase());
     if (user) {
         const balanceOne = await getAccountBalance(user.ethAddress);
-        if (balanceOne < defaultGasForNewUser){
+        if (Number(balanceOne) < defaultGasForNewUser){
             const hash = await transferOne(botWalletAddress, user.oneAddress, defaultGasForNewUser);
             logger.debug("send gas to new user hash on fuel request " + hash);
             const text = TEXT.FUEL_SUCCESS(hash);
@@ -575,7 +575,7 @@ try {
                         processInfoRequest(item);
                     } else if (item.body.toLowerCase().match(regexWithdraw)) {
                         processWithdrawRequest(item);
-                    } else if (item.body.toLowerCase() === COMMANDS.INFO) {
+                    } else if (item.body.toLowerCase() === COMMANDS.FUEL) {
                         processFuelRequest(item);
                     }
                     // else if (item.body.toLowerCase() === "recovery") {
