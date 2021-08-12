@@ -501,11 +501,19 @@ async function processComment(item){
 async function processFuelRequest(item){
     const user = await findUser(item.author.name.toLowerCase());
     if (user) {
-        const hash = await transferOne(botWalletAddress, user.ethAddress, defaultGasForNewUser);
-        logger.debug("send gas to new user hash on fuel request " + hash);
-        const text = TEXT.FUEL_SUCCESS(hash);
-        const subject = "Help message";
-        await sendMessage(item.author.name, subject, text);
+        const balanceOne = await getAccountBalance(user.ethAddress);
+        if (balanceOne < defaultGasForNewUser){
+            const hash = await transferOne(botWalletAddress, user.ethAddress, defaultGasForNewUser);
+            logger.debug("send gas to new user hash on fuel request " + hash);
+            const text = TEXT.FUEL_SUCCESS(hash);
+            const subject = "Fuel result";
+            await sendMessage(item.author.name, subject, text);
+        } else {
+            logger.debug("currently has enough for gas " + item.author.name);
+            const text = TEXT.FUEL_FAILED();
+            const subject = "Fuel result";
+            await sendMessage(item.author.name, subject, text);
+        }
     } else {
         const text = TEXT.ACCOUNT_NOT_EXISTED();
         const subject = "Help message";

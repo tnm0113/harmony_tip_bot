@@ -100,3 +100,7 @@ export const TOKEN_NOT_SUPPORT = (currency) => {
 export const FUEL_SUCCESS = (txlink) => {
     return `You have received some gas! Transaction ID [HERE](${txlink}).${SIGNATURE(botConfig.name)}`
 }
+
+export const FUEL_FAILED = () => {
+    return `You still have enough for GAS!.${SIGNATURE(botConfig.name)}`
+}
