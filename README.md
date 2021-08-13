@@ -29,8 +29,16 @@
     "name": "tnm_tip_bot", // bot reddit account
     "subreddit": "TestPeeBot", //main subreddit where bot support command !one
     "command": "!one",
-    "mainnet": true, 
-    "wiki_link": "https://www.reddit.com/r/AltStreetBets/wiki/peeing_bot-hrc20_tipping"
+    "mainnet": true,
+    "snoowrap_debug": false,
+    "request_delay": 1001,
+    "item_expire_time": 60,
+    "wiki_link": "https://www.reddit.com/r/AltStreetBets/wiki/peeing_bot-hrc20_tipping",
+    "inbox_poll_time": 10000, // interval poll inbox 
+    "comment_poll_time": 5000, // interval poll comment
+    "wallet_seed": "", // seed for bot's wallet for paying gas
+    "wallet_address": "", // wallet address for paying gas (0x address)
+    "gas_for_new": 0.000625 // default gas paying for new user 
   },
   "logger": {
     "dir": "log",
