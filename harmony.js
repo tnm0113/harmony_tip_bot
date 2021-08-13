@@ -30,6 +30,10 @@ async function addAllAccounts(){
     });
 }
 
+function addNewAccount(mnemonic){
+    hmy.wallet.addByMnemonic(mnemonic);
+}
+
 async function transfer(sendAddress, toAddress, amount) {
     logger.info(
         "start tranfer to " +
@@ -154,4 +158,4 @@ function createAccount() {
     };
 }
 
-export { transfer, getAccountBalance, createAccount, addAllAccounts };
+export { transfer, getAccountBalance, createAccount, addAllAccounts, addNewAccount };

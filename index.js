@@ -7,7 +7,8 @@ import {
     transfer,
     getAccountBalance,
     createAccount,
-    addAllAccounts
+    addAllAccounts,
+    addNewAccount
 } from "./harmony.js";
 import * as TEXT from "./text.js";
 
@@ -88,6 +89,7 @@ async function findOrCreate(username) {
             return u;
         } else {
             const blockchainInfo = createAccount();
+            addNewAccount(blockchainInfo.mnemonic);
             logger.debug("blockchainInfo " + JSON.stringify(blockchainInfo));
             return createUser(
                 username,
