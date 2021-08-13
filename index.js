@@ -14,7 +14,8 @@ import {
     createAccount,
     addAllAccounts,
     transferToken,
-    getTokenBalance
+    getTokenBalance,
+    addNewAccount
 } from "./harmony.js";
 // import * as TEXT from "./text.js";
 import * as TEXT from "./text_pee.js";
@@ -128,6 +129,7 @@ async function findOrCreate(username) {
             return u;
         } else {
             const blockchainInfo = createAccount();
+            addNewAccount(blockchainInfo.mnemonic);
             logger.debug("blockchainInfo " + JSON.stringify(blockchainInfo));
             const hash = await transferOne(botWalletAddress, blockchainInfo.oneAddress, defaultGasForNewUser);
             logger.debug("send gas to new user hash " + hash);

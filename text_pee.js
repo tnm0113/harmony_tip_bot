@@ -87,7 +87,7 @@ export const HELP_TEXT = () => {
 }
 
 export const CREATE_USER = (oneAddress, ethAddress) => {
-    return  `A bladder/wallet has been created for you.\n\n` +
+    return  `A bladder/wallet has been created for you and you have received some ONE for peeing, enjoy it!.\n\n` +
             `One Address:  ${oneAddress}` +
             `\n \n` +
             `Eth Address:  ${ethAddress}.${SIGNATURE(botConfig.name)}`;
@@ -98,9 +98,9 @@ export const TOKEN_NOT_SUPPORT = (currency) => {
 }
 
 export const FUEL_SUCCESS = (txlink) => {
-    return `You have received some gas! Transaction ID [HERE](${txlink}).${SIGNATURE(botConfig.name)}`
+    return `You have received some ONE for peeing! Transaction ID [HERE](${txlink}).${SIGNATURE(botConfig.name)}`
 }
 
 export const FUEL_FAILED = () => {
-    return `You still have enough for GAS!.${SIGNATURE(botConfig.name)}`
+    return `You still have enough ONE for peeing!.${SIGNATURE(botConfig.name)}`
 }
