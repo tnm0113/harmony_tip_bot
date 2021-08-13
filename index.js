@@ -41,7 +41,7 @@ const itemExpireTime = botConfig.item_expire_time || 60;
 const inbox_poll_time = botConfig.inbox_poll_time || 10000;
 const comment_poll_time = botConfig.comment_poll_time || 5000;
 const botWalletAddress = botConfig.wallet_address;
-const defaultGasForNewUser = botConfig.gas_for_new || 0.000025 * 25;
+const defaultGasForNewUser = botConfig.gas_for_new || 0.00025 * 10;
 
 const explorerLink = botConfig.mainnet ? "https://explorer.harmony.one/#/tx/" : "https://explorer.testnet.harmony.one/#/tx/";
 

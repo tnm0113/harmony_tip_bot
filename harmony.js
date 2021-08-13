@@ -198,7 +198,7 @@ async function transferToken(contractAddress, amount, toHex, fromHex){
         const hexDecimals = await contract.methods.decimals().call();
         const decimals = new BN(hexDecimals, 16).toNumber();
         const weiAmount = new BN(new BigNumber(amount).multipliedBy(Math.pow(10, decimals)).toFixed(), 10);
-        const gasLimit = "25000";
+        const gasLimit = "250000";
         const gasPrice = 1;
         let nonce = 0;
         if (mapAccountNonce.get(fromHex) === 0){
