@@ -63,6 +63,10 @@ export const INVALID_COMMAND = () => {
     return `Invalid command, please send "HELP" in private message to the tip bot by clicking [HERE](${linkPm}).${SIGNATURE(botConfig.name)}`
 }
 
+export const INVALID_AMOUNT_WITHDRAW = () => {
+    return `Your withdraw/send request is failed, please keep some ONE for fee when peeing`;
+}
+
 export const PRIVATE_INFO = (mnemonic) => {
     return `Below is your wallet recovery phrase. Please keep it safe: \n\n ${mnemonic}.${SIGNATURE(botConfig.name)}`
 }

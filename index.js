@@ -272,6 +272,25 @@ async function processSendRequest(item) {
             const token = getTokenWithName(currency)[0] || null;
             if (token){
                 if (fromUser) {
+                    if (token.name.toLowerCase() === "one"){
+                        const currentBalance = await getAccountBalance(fromUser.ethAddress);
+                        if (currentBalance - amount < defaultGasForNewUser){
+                            await client.composeMessage({
+                                to: item.author.name,
+                                subject: "Send result",
+                                text: TEXT.INVALID_AMOUNT_WITHDRAW()
+                            });
+                            await saveLog(
+                                item.author.name.toLowerCase(),
+                                toUser,
+                                amount,
+                                item.id,
+                                currency,
+                                COMMANDS.SEND
+                            );
+                            return;
+                        }
+                    }
                     const txnHash = await tip(fromUser, toUser, amount, token);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
@@ -358,8 +377,27 @@ async function processWithdrawRequest(item) {
         const token = getTokenWithName(currency)[0] || null;
         if (token){
             let txnHash;
-            if (currency === "one")
-                txnHash = await transferOne(fromUserAddress, addressTo, amount);
+            if (currency === "one"){
+                const currentBalance = await getAccountBalance(user.ethAddress);
+                if (currentBalance - amount < defaultGasForNewUser){
+                    await client.composeMessage({
+                        to: item.author.name,
+                        subject: "Widthdraw result",
+                        text: TEXT.INVALID_AMOUNT_WITHDRAW()
+                    });
+                    await saveLog(
+                        item.author.name.toLowerCase(),
+                        addressTo,
+                        amount,
+                        item.id,
+                        currency,
+                        COMMANDS.WITHDRAW
+                    );
+                    return;
+                } else {
+                    txnHash = await transferOne(fromUserAddress, addressTo, amount);
+                }
+            }
             else 
                 txnHash = await transferToken(token.contract_address, amount, addressTo, user.ethAddress);
             if (txnHash){
