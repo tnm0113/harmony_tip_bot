@@ -201,7 +201,7 @@ async function transferToken(contractAddress, amount, toHex, fromHex){
         const gasLimit = "250000";
         const gasPrice = 1;
         let nonce = 0;
-        if (mapAccountNonce.get(fromHex) === 0 || mapAccountNonce.get(sendAddress) === undefined){
+        if (mapAccountNonce.get(fromHex) === 0 || mapAccountNonce.get(fromHex) === undefined){
             const data = await hmy.messenger.send(
                 RPCMethod.GetTransactionCount,
                 [fromHex, 'latest'],
