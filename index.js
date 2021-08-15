@@ -488,7 +488,7 @@ async function processComment(item){
                         // item.reply(TEXT.INVALID_COMMAND());
                         return;
                     }
-                        // const indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
+                    const indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
                         // const sliceCms = splitCms.slice(indexTokenCommand);
                     const token = getTokenWithCommand(splitCms[indexTokenCommand])[0];
                     logger.debug("sliceCms " + sliceCms);
