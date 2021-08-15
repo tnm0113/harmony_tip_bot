@@ -172,6 +172,10 @@ async function processMention(item) {
                 }
                 if (amount.match(regexNumber)){
                     amount = parseFloat(amount);
+                    if (isNaN(amount)){
+                        item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                        return;    
+                    }
                 } else {
                     item.reply(TEXT.INVALID_COMMAND(botConfig.name));
                     return;
@@ -392,6 +396,10 @@ async function processComment(item){
                 let amount = sliceCms[1];
                 if (amount.match(regexNumber)){
                     amount = parseFloat(amount);
+                    if (isNaN(amount)){
+                        item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                        return;    
+                    }
                 } else {
                     item.reply(TEXT.INVALID_COMMAND(botConfig.name));
                     return;
