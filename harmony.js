@@ -58,7 +58,7 @@ async function transferOne(sendAddress, toAddress, amount) {
         const account = hmy.wallet.getAccount(sendAddress);
         // const nonce = await account.getShardNonce(0);
         let nonce = 0;
-        if (mapAccountNonce.get(sendAddress) === 0){
+        if (mapAccountNonce.get(sendAddress) === 0 || mapAccountNonce.get(sendAddress) === undefined){
             const data = await hmy.messenger.send(
                 RPCMethod.GetTransactionCount,
                 [sendAddress, 'latest'],
@@ -201,7 +201,7 @@ async function transferToken(contractAddress, amount, toHex, fromHex){
         const gasLimit = "250000";
         const gasPrice = 1;
         let nonce = 0;
-        if (mapAccountNonce.get(fromHex) === 0){
+        if (mapAccountNonce.get(fromHex) === 0 || mapAccountNonce.get(sendAddress) === undefined){
             const data = await hmy.messenger.send(
                 RPCMethod.GetTransactionCount,
                 [fromHex, 'latest'],
