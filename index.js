@@ -475,7 +475,7 @@ async function processComment(item){
             }
             if (allowProcess){
                 // const index = splitCms.findIndex((e) => e === command);
-                if (splitCms.length > 3){
+                if (splitCms.length >= 3){
                     if (tokenCommands.includes(splitCms[splitCms.length - 1 - 1]) 
                         || tokenCommands.includes(splitCms[splitCms.length - 2 - 1]) 
                         || tokenCommands.includes(splitCms[0])){
@@ -493,6 +493,7 @@ async function processComment(item){
                         if (amount.match(regexNumber)){
                             amount = parseFloat(amount);
                             if (amount === NaN){
+                                logger.debug("amount not a number");
                                 item.reply(TEXT.INVALID_COMMAND());
                                 return;
                             }
