@@ -384,8 +384,20 @@ async function processComment(item){
                 allowProcess = true;
             }
             if (allowProcess){
-                const index = splitCms.findIndex((e) => e === command);
-                const sliceCms = splitCms.slice(index);
+                let sliceCms = [];
+                // const index = splitCms.findIndex((e) => e === command);
+                if (splitCms[splitCms.length - 2] === command){
+                    sliceCms = splitCms.slice(splitCms.length - 2);
+                } else if (splitCms[splitCms.length - 3] === command){
+                    sliceCms = splitCms.slice(splitCms.length - 3);
+                } else if (splitCms[0] === command){
+                    sliceCms = splitCms;
+                } else {
+                    logger.debug("comment not valid command");
+                    // item.reply(TEXT.INVALID_COMMAND(botConfig.name));
+                    return;
+                }
+                // sliceCms = splitCms.slice(index);
                 logger.debug("sliceCms ", sliceCms);
                 if (sliceCms.length < 2){
                     logger.debug("comment not valid command");
