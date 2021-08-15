@@ -475,8 +475,8 @@ async function processComment(item){
             }
             if (allowProcess){
                 // const index = splitCms.findIndex((e) => e === command);
-                if (tokenCommands.includes(splitCms[splitCms.length() - 1]) 
-                    || tokenCommands.includes(splitCms[splitCms.length() - 2]) 
+                if (tokenCommands.includes(splitCms[splitCms.length - 1]) 
+                    || tokenCommands.includes(splitCms[splitCms.length - 2]) 
                     || tokenCommands.includes(splitCms[0])){
                     const indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
                     const sliceCms = splitCms.slice(indexTokenCommand);
