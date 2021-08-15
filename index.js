@@ -213,6 +213,11 @@ async function processMention(item) {
             }
             if (amount.match(regexNumber)){
                 amount = parseFloat(amount);
+                if (isNaN(amount)){
+                    logger.debug("amount not a number");
+                    item.reply(TEXT.INVALID_COMMAND());
+                    return;
+                }
             } else {
                 item.reply(TEXT.INVALID_COMMAND());
                 return;
@@ -477,21 +482,27 @@ async function processComment(item){
                 // const index = splitCms.findIndex((e) => e === command);
                 if (splitCms.length >= 2){
                     let sliceCms = [];
+                    // let indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
+                    let token = null;
                     if (tokenCommands.includes(splitCms[splitCms.length - 2])){
                         sliceCms = splitCms.slice(splitCms.length - 2);
+                        token = getTokenWithCommand(splitCms[splitCms.length - 2])[0];
                     } else if (tokenCommands.includes(splitCms[splitCms.length - 3])){
                         sliceCms = splitCms.slice(splitCms.length - 3);
+                        token = getTokenWithCommand(splitCms[splitCms.length - 3])[0];
                     } else if (tokenCommands.includes(splitCms[0])){
                         sliceCms = splitCms;
+                        token = getTokenWithCommand(splitCms[0])[0];
                     } else {
                         logger.debug("comment not valid command");
                         // item.reply(TEXT.INVALID_COMMAND());
                         return;
                     }
-                    const indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
+                    
                         // const sliceCms = splitCms.slice(indexTokenCommand);
-                    const token = getTokenWithCommand(splitCms[indexTokenCommand])[0];
+                    // const token = getTokenWithCommand(splitCms[indexTokenCommand])[0];
                     logger.debug("sliceCms " + sliceCms);
+                    logger.debug("token " + JSON.stringify(token));
                     // if (sliceCms.length < 2){
                     //     logger.debug("comment not valid command");
                     //     item.reply(TEXT.INVALID_COMMAND());
