@@ -70,7 +70,7 @@ async function tip(fromUser, toUserName, amount, token) {
             " to " +
             toUserName +
             " amount " +
-            amount +
+            amount + " " +
             token.name
     );
     try {
@@ -463,8 +463,8 @@ async function processComment(item){
         logger.debug("text " + text);
         let splitCms  = text.split(/\s+/g);
         logger.debug("split cms " + splitCms);
-        const command = botConfig.command;
-        if (splitCms.findIndex((e) => e === command) > -1 || splitCms.findIndex((e) => tokenCommands.includes(e)) > -1){
+        // const command = botConfig.command;
+        if (splitCms.findIndex((e) => tokenCommands.includes(e)) > -1){
             let allowProcess = false;
             if (Date.now()/1000 - item.created_utc > itemExpireTime){
                 logger.debug("need to check log in db");
@@ -474,59 +474,67 @@ async function processComment(item){
                 allowProcess = true;
             }
             if (allowProcess){
-                const index = splitCms.findIndex((e) => e === command);
-                const indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
-                const sliceCms = index > -1 ? splitCms.slice(index) : splitCms.slice(indexTokenCommand);
-                const token = index > -1 ? getTokenWithCommand(command)[0] : getTokenWithCommand(splitCms[indexTokenCommand])[0];
-                console.log("sliceCms ", sliceCms);
-                if (sliceCms.length < 2){
-                    logger.debug("comment not valid command");
-                    item.reply(TEXT.INVALID_COMMAND());
-                    return;
-                }
-                const sendUserName = item.author.name.toLowerCase();
-                let amount = sliceCms[1];
-                if (amount.match(regexNumber)){
-                    amount = parseFloat(amount);
-                } else {
-                    item.reply(TEXT.INVALID_COMMAND());
-                    return;
-                }
-                let toUserName = "";
-                logger.debug("find user " + sendUserName);
-                const sendUser = await findUser(sendUserName);
-                if (sendUser){
-                    logger.debug("get user sucess, start get parent comment author");
-                    // const parentComment = client.getComment(item.parent_id);
-                    toUserName = await client.getComment(item.parent_id).author.name;
-                    logger.debug("get parent comment author name done");
-                    // toUserName = await parentComment.author.name;
-                    toUserName = toUserName.toLowerCase();
-                    if (sliceCms.length > 2){
-                        if (sliceCms[2].match(regexUser)){
-                            toUserName = sliceCms[2].replace("/u/","").replace("u/","");
+                // const index = splitCms.findIndex((e) => e === command);
+                if (tokenCommands.includes(splitCms[splitCms.length() - 1]) 
+                    || tokenCommands.includes(splitCms[splitCms.length() - 2]) 
+                    || tokenCommands.includes(splitCms[0])){
+                    const indexTokenCommand = splitCms.findIndex((e) => tokenCommands.includes(e));
+                    const sliceCms = splitCms.slice(indexTokenCommand);
+                    const token = getTokenWithCommand(splitCms[indexTokenCommand])[0];
+                    logger.debug("sliceCms " + sliceCms);
+                    // if (sliceCms.length < 2){
+                    //     logger.debug("comment not valid command");
+                    //     item.reply(TEXT.INVALID_COMMAND());
+                    //     return;
+                    // }
+                    const sendUserName = item.author.name.toLowerCase();
+                    let amount = sliceCms[1];
+                    if (amount.match(regexNumber)){
+                        amount = parseFloat(amount);
+                        if (amount === NaN){
+                            item.reply(TEXT.INVALID_COMMAND());
+                            return;
                         }
-                    }
-                    logger.debug("start tip");
-                    const txnHash = await tip(sendUser, toUserName, amount, token);
-                    if (txnHash) {
-                        const txLink = explorerLink + txnHash;
-                        item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink, token.name));
                     } else {
-                        logger.error("tip failed");
-                        item.reply(TEXT.TIP_FAILED());
+                        item.reply(TEXT.INVALID_COMMAND());
+                        return;
                     }
-                } else {
-                    item.reply(TEXT.ACCOUNT_NOT_EXISTED());
+                    let toUserName = "";
+                    logger.debug("find user " + sendUserName);
+                    const sendUser = await findUser(sendUserName);
+                    if (sendUser){
+                        logger.debug("get user sucess, start get parent comment author");
+                        // const parentComment = client.getComment(item.parent_id);
+                        toUserName = await client.getComment(item.parent_id).author.name;
+                        logger.debug("get parent comment author name done");
+                        // toUserName = await parentComment.author.name;
+                        toUserName = toUserName.toLowerCase();
+                        if (sliceCms.length > 2){
+                            if (sliceCms[2].match(regexUser)){
+                                toUserName = sliceCms[2].replace("/u/","").replace("u/","");
+                            }
+                        }
+                        logger.debug("start tip");
+                        const txnHash = await tip(sendUser, toUserName, amount, token);
+                        if (txnHash) {
+                            const txLink = explorerLink + txnHash;
+                            item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink, token.name));
+                        } else {
+                            logger.error("tip failed");
+                            item.reply(TEXT.TIP_FAILED());
+                        }
+                    } else {
+                        item.reply(TEXT.ACCOUNT_NOT_EXISTED());
+                    }
+                    await saveLog(
+                        sendUserName,
+                        toUserName,
+                        amount,
+                        item.id,
+                        "ONE",
+                        COMMANDS.TIP
+                    );
                 }
-                await saveLog(
-                    sendUserName,
-                    toUserName,
-                    amount,
-                    item.id,
-                    "ONE",
-                    COMMANDS.TIP
-                );
             } else {
                 logger.debug("comment item already process");
             }

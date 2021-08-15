@@ -152,10 +152,10 @@ export async function sendTransaction(signedTxn) {
             .on("confirmation", (confirmation) => {
                 logger.debug("confirmation " + confirmation);
                 if (confirmation !== "CONFIRMED")
-                throw new Error(
-                    "Transaction confirm failed. Network fee is not enough or something went wrong."
-                );
-            }
+                    throw new Error(
+                        "Transaction confirm failed. Network fee is not enough or something went wrong."
+                    );
+                }
             )
             .on("error", (error) => {
                 throw new Error(error);
@@ -225,6 +225,8 @@ async function transferToken(contractAddress, amount, toHex, fromHex){
         });
         const account = hmy.wallet.getAccount(fromHex);
         const signedTxn = await account.signTransaction(txn, false);
+        const tx = hmy.transactions.recover(signedTxn.getRawTransaction());
+        logger.debug('tx ' + JSON.stringify(tx));
         const res = await sendTransaction(signedTxn);
         logger.info("res send transaction " + JSON.stringify(res));
         if (res.result) {
