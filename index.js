@@ -475,7 +475,7 @@ async function processComment(item){
             }
             if (allowProcess){
                 // const index = splitCms.findIndex((e) => e === command);
-                if (splitCms.length >= 3){
+                if (splitCms.length >= 2){
                     if (tokenCommands.includes(splitCms[splitCms.length - 1 - 1]) 
                         || tokenCommands.includes(splitCms[splitCms.length - 2 - 1]) 
                         || tokenCommands.includes(splitCms[0])){
