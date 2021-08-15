@@ -491,8 +491,10 @@ async function processComment(item){
                         const sendUserName = item.author.name.toLowerCase();
                         let amount = sliceCms[1];
                         if (amount.match(regexNumber)){
+                            logger.debug("amount " + amount + " match regex");
                             amount = parseFloat(amount);
-                            if (amount === NaN){
+                            logger.debug("amount after parse " + amount);
+                            if (isNaN(amount)){
                                 logger.debug("amount not a number");
                                 item.reply(TEXT.INVALID_COMMAND());
                                 return;
