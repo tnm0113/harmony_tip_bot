@@ -7,5 +7,7 @@ export const COMMANDS = {
     RECOVERY: "recovery",
     CREATE: "create",
     REGISTER: "register",
-    FUEL: "fuel"
+    FUEL: "fuel",
+    GS: "goldenshower",
+    GSP: "goldensprinkler"
 }

@@ -562,6 +562,13 @@ async function processComment(item){
             } else {
                 logger.debug("comment item already process");
             }
+        } if (splitCms.includes(COMMANDS.GS)){
+            const replies = await item.expandReplies();
+            console.log("expand replies ", replies);
+            const submission = item.submission;
+            console.log("submission ", submission);
+            const parent = await client.getComment(item.parent_id).fetch();
+            console.log('parent ', parent);
         } else {
             logger.debug("comment not valid command");
         }
@@ -649,7 +656,7 @@ try {
                         processWithdrawRequest(item);
                     } else if (item.body.toLowerCase() === COMMANDS.FUEL) {
                         processFuelRequest(item);
-                    }
+                    } 
                     // else if (item.body.toLowerCase() === "recovery") {
                     //     processPrivateRequest(item);
                     // }
