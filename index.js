@@ -569,6 +569,9 @@ async function processComment(item){
             console.log("submission ", submission);
             const parent = await client.getComment(item.parent_id).fetch();
             console.log('parent ', parent);
+            console.log('parent ', parent.parent_id);
+            // const expandReplies = await parent.expandReplies();
+            // console.log("expand replies from submission ", expandReplies);
         } else {
             logger.debug("comment not valid command");
         }
