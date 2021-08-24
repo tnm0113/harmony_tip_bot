@@ -201,14 +201,14 @@ async function processMention(item) {
                     amount = sliceCms[1];
                     currency = sliceCms[2];
                     const author = await c.author;
-                    toUser = author.name;
+                    toUser = author.name.toLowerCase();
                     logger.info("tip from comment to user " + toUser + " amount " + amount);
                 }
             } else {
                 amount = splitCms[2];
                 currency = splitCms[3];
                 const author = await c.author;
-                toUser = author.name;
+                toUser = author.name.toLowerCase();
                 logger.info("tip from comment to user " + toUser + " amount " + amount);
             }
             if (amount.match(regexNumber)){
