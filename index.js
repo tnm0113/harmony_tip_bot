@@ -1,6 +1,6 @@
 import { InboxStream, CommentStream } from "snoostorm";
 import Snoowrap from "snoowrap";
-import { createUser, findUser, saveLog, checkExistedInLog } from "./db.js";
+import { createUser, findUser, saveLog, checkExistedInLog, getAllUser } from "./db.js";
 import { logger } from "./logger.js";
 import { COMMANDS } from "./const.js";
 import { createRequire } from "module";
@@ -115,10 +115,12 @@ async function getBalance(username) {
 async function getBalanceOf(token, user){
     if (token.name === "ONE"){
         const balanceOne = await getAccountBalance(user.ethAddress);    
-        return `ONE | ${balanceOne} \n`;
+        // return `ONE | ${balanceOne} \n`;
+        return balanceOne;
     } else {
         const balanceToken = await getTokenBalance(token.contract_address, user.ethAddress);
-        return `${token.name} | ${balanceToken} \n`;
+        // return `${token.name} | ${balanceToken} \n`;
+        return balanceToken;
     }
 }
 
@@ -604,75 +606,130 @@ async function processFuelRequest(item){
 }
 
 try {
-    addAllAccounts();
+    // addAllAccounts();
 
-    const inbox = new InboxStream(client, {
-        filter: "mentions" | "messages",
-        limit: 50,
-        pollTime: inbox_poll_time,
-    });
+    // const inbox = new InboxStream(client, {
+    //     filter: "mentions" | "messages",
+    //     limit: 50,
+    //     pollTime: inbox_poll_time,
+    // });
 
-    const comments = new CommentStream(client, {
-        subreddit: botConfig.subreddit,
-        limit: 30,
-        pollTime: comment_poll_time,
-    })
+    // const comments = new CommentStream(client, {
+    //     subreddit: botConfig.subreddit,
+    //     limit: 30,
+    //     pollTime: comment_poll_time,
+    // })
 
-    comments.on("item", async function(item){
-        try {
-            processComment(item);
-        } catch (error) {
-            logger.error("process comment error " + JSON.stringify(error));
-        }
-    });
+    // comments.on("item", async function(item){
+    //     try {
+    //         processComment(item);
+    //     } catch (error) {
+    //         logger.error("process comment error " + JSON.stringify(error));
+    //     }
+    // });
     
-    inbox.on("item", async function (item) {
-        try {
-            if (item.new) {
-                if (item.was_comment) {
-                    let allowProcess = false;
-                    if (Date.now()/1000 - item.created_utc > itemExpireTime){
-                        logger.debug("need to check log in db");
-                        const log = await checkExistedInLog(item.id);
-                        allowProcess = log ? false : true;
-                    } else {
-                        allowProcess = true;
-                    }
-                    if (allowProcess)
-                        processMention(item);
-                    else
-                        logger.debug("inbox item mention already processed");    
-                } else {
-                    logger.info("process private message from " + item.author.name + " body " + item.body);
-                    if (
-                        item.body.toLowerCase() === COMMANDS.CREATE ||
-                        item.body.toLowerCase() === COMMANDS.REGISTER
-                    ) {
-                        processCreateRequest(item);
-                    } else if (item.body.toLowerCase() === COMMANDS.HELP) {
-                        returnHelp(item.author.name);
-                    } else if (item.body.toLowerCase().match(regexSend)) {
-                        processSendRequest(item);
-                    } else if (item.body.toLowerCase() === COMMANDS.INFO) {
-                        processInfoRequest(item);
-                    } else if (item.body.toLowerCase().match(regexWithdraw)) {
-                        processWithdrawRequest(item);
-                    } else if (item.body.toLowerCase() === COMMANDS.FUEL) {
-                        processFuelRequest(item);
-                    } 
-                    // else if (item.body.toLowerCase() === "recovery") {
-                    //     processPrivateRequest(item);
-                    // }
-                    await item.markAsRead();
-                }
-            }
-        } catch (error) {
-            logger.error("process item inbox error " + error);
-        }
-    });
+    // inbox.on("item", async function (item) {
+    //     try {
+    //         if (item.new) {
+    //             if (item.was_comment) {
+    //                 let allowProcess = false;
+    //                 if (Date.now()/1000 - item.created_utc > itemExpireTime){
+    //                     logger.debug("need to check log in db");
+    //                     const log = await checkExistedInLog(item.id);
+    //                     allowProcess = log ? false : true;
+    //                 } else {
+    //                     allowProcess = true;
+    //                 }
+    //                 if (allowProcess)
+    //                     processMention(item);
+    //                 else
+    //                     logger.debug("inbox item mention already processed");    
+    //             } else {
+    //                 logger.info("process private message from " + item.author.name + " body " + item.body);
+    //                 if (
+    //                     item.body.toLowerCase() === COMMANDS.CREATE ||
+    //                     item.body.toLowerCase() === COMMANDS.REGISTER
+    //                 ) {
+    //                     processCreateRequest(item);
+    //                 } else if (item.body.toLowerCase() === COMMANDS.HELP) {
+    //                     returnHelp(item.author.name);
+    //                 } else if (item.body.toLowerCase().match(regexSend)) {
+    //                     processSendRequest(item);
+    //                 } else if (item.body.toLowerCase() === COMMANDS.INFO) {
+    //                     processInfoRequest(item);
+    //                 } else if (item.body.toLowerCase().match(regexWithdraw)) {
+    //                     processWithdrawRequest(item);
+    //                 } else if (item.body.toLowerCase() === COMMANDS.FUEL) {
+    //                     processFuelRequest(item);
+    //                 } 
+    //                 // else if (item.body.toLowerCase() === "recovery") {
+    //                 //     processPrivateRequest(item);
+    //                 // }
+    //                 await item.markAsRead();
+    //             }
+    //         }
+    //     } catch (error) {
+    //         logger.error("process item inbox error " + error);
+    //     }
+    // });
 
-    inbox.on("end", () => logger.info("Inbox subcribe ended!!!"));
+    // inbox.on("end", () => logger.info("Inbox subcribe ended!!!"));
 } catch (error){
     logger.error("snoowrap error " + JSON.stringify(error) + error);
 }
 
+String.prototype.toCamelCase = function(cap1st) {
+    'use strict';
+    return ((cap1st ? '-' : '') + this).replace(/-+([^-])/g, function(a, b) {
+        return b.toUpperCase();
+    });
+};
+
+function isCamelCase(str){
+
+    'use strict';
+
+    var strArr = str.split('');
+    var string = '';
+    for(var i in strArr){
+
+        if(strArr[i].toUpperCase() === strArr[i]){
+            string += '-'+strArr[i].toLowerCase();
+        }else{
+            string += strArr[i];
+        }
+
+    }
+
+    if(string.toCamelCase(true) === str){
+        return true;
+    }else{
+        return false;
+    }
+
+}
+
+getAllUser().then((users) => {
+    users.forEach(async (u) => {
+        addNewAccount(u.mnemonic);
+        if (isCamelCase(u.username)){
+            const duplicateUser = users.find((us) => us.username === u.username.toLowerCase());
+            if (duplicateUser){
+                console.log('username ' + u.username + ' eth address ' + u.ethAddress);
+                console.log('duplicate username ' + duplicateUser.username + ' eth address ' + duplicateUser.ethAddress);
+                for (const token of tokens.tokens){
+                    if (token.name !== 'ONE'){
+                        const b = await getBalanceOf(token, u);
+                        if (b > 0){
+                            console.log('need to transfer back ' + u.username + ' balance of ' + token.name + ' is ' + b);
+                            console.log('from ' + u.ethAddress + ' to ' + duplicateUser.ethAddress);
+                            // const hash = await transferToken(token.contract_address, b, duplicateUser.ethAddress, u.ethAddress);
+                            // console.log('transfer result ' + hash);
+                            // await new Promise(r => setTimeout(r, 1000));
+                        }
+                    }
+                }
+            }
+        }
+    })
+})
