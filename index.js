@@ -229,32 +229,34 @@ async function processMention(item) {
             //     item.reply("Tip bot only support ONE currently !!!");
             //     return;
             // }
-            const token = getTokenWithName(currency)[0] || null;
-            if (token){
-                const sendUserName = await item.author.name.toLowerCase();
-                const sendUser = await findUser(sendUserName);
-                if (sendUser) {
-                    const txnHash = await tip(sendUser, toUser, amount, token);
-                    if (txnHash) {
-                        const txLink = explorerLink + txnHash;
-                        item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink, token.name));
+            if (getTokenWithName(currency)){
+                const token = getTokenWithName(currency)[0] || null;
+                if (token){
+                    const sendUserName = await item.author.name.toLowerCase();
+                    const sendUser = await findUser(sendUserName);
+                    if (sendUser) {
+                        const txnHash = await tip(sendUser, toUser, amount, token);
+                        if (txnHash) {
+                            const txLink = explorerLink + txnHash;
+                            item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink, token.name));
+                        } else {
+                            logger.error("tip failed");
+                            item.reply(TEXT.TIP_FAILED());
+                        }
                     } else {
-                        logger.error("tip failed");
-                        item.reply(TEXT.TIP_FAILED());
+                        item.reply(TEXT.ACCOUNT_NOT_EXISTED());
                     }
+                    await saveLog(
+                        item.author.name,
+                        toUser,
+                        amount,
+                        item.id,
+                        currency,
+                        COMMANDS.TIP
+                    );
                 } else {
-                    item.reply(TEXT.ACCOUNT_NOT_EXISTED());
+                    item.reply(TEXT.TOKEN_NOT_SUPPORT(currency));
                 }
-                await saveLog(
-                    item.author.name,
-                    toUser,
-                    amount,
-                    item.id,
-                    currency,
-                    COMMANDS.TIP
-                );
-            } else {
-                item.reply(TEXT.TOKEN_NOT_SUPPORT(currency));
             }
         } else {
             item.reply(TEXT.INVALID_COMMAND());
