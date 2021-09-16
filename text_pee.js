@@ -25,9 +25,9 @@ const tip_failed = `Your tip was unsuccessful. Please review your command and re
 (make "HERE" a hyperlink to PM the bot)`
 export const TIP_FAILED = () => {
     const link = linkPmReddit("My Info", "info");
-    return `Your tip was not successful. Please review your command and retry. ` + 
-        `Ensure your balance covers the transaction and gas. For more information, send the word INFO in private message ` + 
-        `by clicking [HERE](${link}).${SIGNATURE(botConfig.name)}`
+    return `Sorry, your tip was not successful. Please try again. ` + 
+        `Please contact the mods of r/AltStreetBets if this keeps on occuring` + 
+        `.${SIGNATURE(botConfig.name)}`
 }
       
 //Info Reply:    
