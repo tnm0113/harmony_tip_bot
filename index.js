@@ -193,7 +193,7 @@ async function processMention(item) {
                         toUser = sliceCms[1].replace("/u/","").replace("u/","");
                         amount = sliceCms[2];
                         currency = sliceCms[3];
-                        logger.debug("send from comment mention to user " + toUser +  " amount " + amount);
+                        logger.debug("send from comment mention to user " + toUser +  " amount " + amount + " token " + currency);
                     } else {
                         item.reply(TEXT.TIP_FAILED());
                     }
@@ -202,14 +202,14 @@ async function processMention(item) {
                     currency = sliceCms[2];
                     const author = await c.author;
                     toUser = author.name.toLowerCase();
-                    logger.info("tip from comment mention to user " + toUser + " amount " + amount);
+                    logger.info("tip from comment mention to user " + toUser + " amount " + amount + " token " + currency);
                 }
             } else {
                 amount = splitCms[2];
                 currency = splitCms[3];
                 const author = await c.author;
                 toUser = author.name.toLowerCase();
-                logger.info("tip from comment mention to user " + toUser + " amount " + amount);
+                logger.info("tip from comment mention to user " + toUser + " amount " + amount + " token " + currency);
             }
             if (amount.match(regexNumber)){
                 amount = parseFloat(amount);
