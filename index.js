@@ -35,7 +35,10 @@ function getTokenWithCommand(tokenCommand){
 }
 
 function getTokenWithName(tokenName){
-    return tokens.tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
+    if (tokenName)
+        return tokens.tokens.filter((token) => token.name.toLowerCase() === tokenName.toLowerCase());
+    else 
+        return null;
 }
 const itemExpireTime = botConfig.item_expire_time || 60;
 const inbox_poll_time = botConfig.inbox_poll_time || 10000;
