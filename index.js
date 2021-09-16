@@ -277,52 +277,54 @@ async function processSendRequest(item) {
             const currency = splitBody[2];
             const toUser = splitBody[3].match(regexUser) ? splitBody[3].replace("/u/","").replace("u/","") : splitBody[3];
             const fromUser = await findUser(item.author.name.toLowerCase());
-            const token = getTokenWithName(currency)[0] || null;
-            if (token){
-                if (fromUser) {
-                    if (token.name.toLowerCase() === "one"){
-                        const currentBalance = await getAccountBalance(fromUser.ethAddress);
-                        if (currentBalance - amount < defaultGasForNewUser){
+            if (getTokenWithCommand(currency)){
+                const token = getTokenWithName(currency)[0] || null;
+                if (token){
+                    if (fromUser) {
+                        if (token.name.toLowerCase() === "one"){
+                            const currentBalance = await getAccountBalance(fromUser.ethAddress);
+                            if (currentBalance - amount < defaultGasForNewUser){
+                                await client.composeMessage({
+                                    to: item.author.name,
+                                    subject: "Send result",
+                                    text: TEXT.INVALID_AMOUNT_WITHDRAW()
+                                });
+                                await saveLog(
+                                    item.author.name.toLowerCase(),
+                                    toUser,
+                                    amount,
+                                    item.id,
+                                    currency,
+                                    COMMANDS.SEND
+                                );
+                                return;
+                            }
+                        }
+                        const txnHash = await tip(fromUser, toUser, amount, token);
+                        if (txnHash) {
+                            const txLink = explorerLink + txnHash;
                             await client.composeMessage({
                                 to: item.author.name,
                                 subject: "Send result",
-                                text: TEXT.INVALID_AMOUNT_WITHDRAW()
+                                text: TEXT.TIP_SUCCESS(amount, toUser, txLink, token.name)
                             });
-                            await saveLog(
-                                item.author.name.toLowerCase(),
-                                toUser,
-                                amount,
-                                item.id,
-                                currency,
-                                COMMANDS.SEND
-                            );
-                            return;
+                        } else {
+                            await client.composeMessage({
+                                to: item.author.name,
+                                subject: "Send result:",
+                                text: TEXT.TIP_FAILED()
+                            });
                         }
-                    }
-                    const txnHash = await tip(fromUser, toUser, amount, token);
-                    if (txnHash) {
-                        const txLink = explorerLink + txnHash;
-                        await client.composeMessage({
-                            to: item.author.name,
-                            subject: "Send result",
-                            text: TEXT.TIP_SUCCESS(amount, toUser, txLink, token.name)
-                        });
                     } else {
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result:",
-                            text: TEXT.TIP_FAILED()
+                            text: TEXT.ACCOUNT_NOT_EXISTED()
                         });
                     }
                 } else {
-                    await client.composeMessage({
-                        to: item.author.name,
-                        subject: "Send result:",
-                        text: TEXT.ACCOUNT_NOT_EXISTED()
-                    });
+                    item.reply(TEXT.TOKEN_NOT_SUPPORT(currency));
                 }
-            } else {
-                item.reply(TEXT.TOKEN_NOT_SUPPORT(currency));
             }
             await saveLog(
                 item.author.name.toLowerCase(),
