@@ -47,7 +47,7 @@ async function transfer(sendAddress, toAddress, amount) {
         const account = hmy.wallet.getAccount(sendAddress);
         // const nonce = await account.getShardNonce(0);
         let nonce = 0;
-        if (mapAccountNonce.get(sendAddress) === 0 || mapAccountNonce.get(sendAddress) === undefined){
+        if (mapAccountNonce.get(sendAddress) === 0){
             const data = await hmy.messenger.send(
                 RPCMethod.GetTransactionCount,
                 [sendAddress, 'latest'],
@@ -68,7 +68,7 @@ async function transfer(sendAddress, toAddress, amount) {
             gasLimit: "21000",
             shardID: 0,
             toShardID: 0,
-            gasPrice: new Unit("2").asGwei().toWei(),
+            gasPrice: new Unit("1").asGwei().toWei(),
         });
         const signedTxn = await account.signTransaction(txn, false);
         const tx = hmy.transactions.recover(signedTxn.getRawTransaction());
