@@ -59,7 +59,6 @@ async function transfer(sendAddress, toAddress, amount) {
         } else {
             nonce = mapAccountNonce.get(sendAddress) + 1;
         }
-        mapAccountNonce.set(sendAddress, nonce);
         logger.debug("account nonce " + nonce);
         const txn = hmy.transactions.newTx({
             nonce: nonce,
@@ -76,6 +75,7 @@ async function transfer(sendAddress, toAddress, amount) {
         const res = await sendTransaction(signedTxn);
         logger.info("res send transaction " + JSON.stringify(res));
         if (res.result) {
+            mapAccountNonce.set(sendAddress, nonce);
             return res.txnHash;
         } else {
             logger.error("txn hash error " + res.mesg);
