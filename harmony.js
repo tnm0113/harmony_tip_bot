@@ -91,7 +91,9 @@ export async function sendTransaction(signedTxn) {
     try {
         signedTxn
             .observed()
-            .on("transactionHash", (txnHash) => {})
+            .on("transactionHash", (txnHash) => {
+                logger.debug("txnhash " + txnHash);
+            })
             .on("confirmation", (confirmation) => {
                 logger.debug("confirmation " + confirmation);
                 if (confirmation !== "CONFIRMED")
