@@ -69,19 +69,20 @@ async function transfer(sendAddress, toAddress, amount) {
             toShardID: 0,
             gasPrice: new Unit("1").asGwei().toWei(),
         });
+        mapAccountNonce.set(sendAddress, nonce);
         const signedTxn = await account.signTransaction(txn, false);
         const tx = hmy.transactions.recover(signedTxn.getRawTransaction());
         logger.debug('tx ' + JSON.stringify(tx));
         const res = await sendTransaction(signedTxn);
         logger.info("res send transaction " + JSON.stringify(res));
         if (res.result) {
-            mapAccountNonce.set(sendAddress, nonce);
             return res.txnHash;
         } else {
             logger.error("txn hash error " + res.mesg);
             return null;
         }
     } catch (err) {
+        mapAccountNonce.set(sendAddress, 0);
         logger.error("transfer error " + JSON.stringify(err) + " " + err);
         return null;
     }

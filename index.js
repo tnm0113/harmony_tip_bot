@@ -376,12 +376,10 @@ async function processComment(item){
         const command = botConfig.command;
         if (splitCms.findIndex((e) => e === command) > -1){
             let allowProcess = false;
-            if (Date.now()/1000 - item.created_utc > itemExpireTime){
+            if (Date.now()/1000 - item.created_utc < itemExpireTime){
                 logger.debug("need to check log in db");
                 const log = await checkExistedInLog(item.id);
                 allowProcess = log === null;
-            } else {
-                allowProcess = true;
             }
             if (allowProcess){
                 let sliceCms = [];
@@ -490,13 +488,11 @@ try {
             if (item.new) {
                 if (item.was_comment) {
                     let allowProcess = false;
-                    if (Date.now()/1000 - item.created_utc > itemExpireTime){
+                    if (Date.now()/1000 - item.created_utc < itemExpireTime){
                         logger.debug("need to check log in db");
                         const log = await checkExistedInLog(item.id);
                         allowProcess = log ? false : true;
-                    } else {
-                        allowProcess = true;
-                    }
+                    } 
                     if (allowProcess)
                         processMention(item);
                     else
