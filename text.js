@@ -46,6 +46,14 @@ export const WITHDRAW_SUCCESS = (txlink) => {
     return `Your withdraw was successful! Transaction ID [HERE](${txlink}).${SIGNATURE(botConfig.name)}`
 }
 
+export const FAUCET_SUCCESS = () => {
+    return `Your account had been created and some ONEs just been sent to your wallet, enjoy it !!!`;
+}
+
+export const FAUCET_ERROR = () => {
+    return `Your account had been created but we dont have enough ONEs to give you, please contact mods !!!`;
+}
+
 //Withdraw Failure:
 export const WITHDRAW_FAILED = `Your withdraw was not successful. Please check your command and ensure the address is correct. Be sure you have enough funds and small amount for the transaction fee.`
 

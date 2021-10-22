@@ -8,7 +8,8 @@ import {
     getAccountBalance,
     createAccount,
     addAllAccounts,
-    addNewAccount
+    addNewAccount,
+    faucetForNewUser
 } from "./harmony.js";
 import * as TEXT from "./text.js";
 
@@ -89,7 +90,7 @@ async function findOrCreate(username) {
             return u;
         } else {
             const blockchainInfo = createAccount();
-            addNewAccount(blockchainInfo.mnemonic);
+            // addNewAccount(blockchainInfo.mnemonic);
             logger.debug("blockchainInfo " + JSON.stringify(blockchainInfo));
             return createUser(
                 username,
@@ -140,6 +141,16 @@ async function processMention(item) {
         .replace("\\", " ")
         .split(/\s+/g);
     logger.debug("split cms " + splitCms);
+
+    if (item.body.toLowerCase() === "!faucet"){
+        const rs = await processFaucetRequest(item);
+        if (rs){
+            item.reply(TEXT.FAUCET_SUCCESS);
+        } else {
+            item.reply(TEXT.FAUCET_ERROR);
+        }
+        return;
+    }
     if (splitCms.findIndex((e) => e === botConfig.command) > -1){
         logger.debug("process in comment section");
         return;
@@ -276,6 +287,23 @@ async function processSendRequest(item) {
     }
 }
 
+async function processFaucetRequest(item){
+    const username = item.author.name.toLowerCase();
+    const user = await findUser(username);
+    if (user){
+        return;
+    }
+    const newUserInfo = createAccount();
+    await createUser(
+        username,
+        newUserInfo.ethAddress,
+        newUserInfo.oneAddress,
+        newUserInfo.mnemonic
+    );
+    const rs = await faucetForNewUser(newUserInfo.oneAddress);
+    return rs;
+}
+
 async function processInfoRequest(item) {
     const info = await getBalance(item.author.name.toLowerCase());
     if (info) {
@@ -357,7 +385,7 @@ async function processCreateRequest(item) {
 }
 
 async function processComment(item){
-    if (item.author.name === botConfig.name)
+    if (item.author.name.toLowerCase() === botConfig.name.toLowerCase())
         return;
     logger.info(
         "receive comment from " +
@@ -512,7 +540,22 @@ try {
                         processInfoRequest(item);
                     } else if (item.body.toLowerCase().match(regexWithdraw)) {
                         processWithdrawRequest(item);
-                    } 
+                    } else if (item.body.toLowerCase() === "faucet") {
+                        const result = await processFaucetRequest(item);
+                        if (result){
+                            await client.composeMessage({
+                                to: item.author.name,
+                                subject: "Faucet result",
+                                text: TEXT.FAUCET_SUCCESS()
+                            });
+                        } else {
+                            await client.composeMessage({
+                                to: item.author.name,
+                                subject: "Faucet result",
+                                text: TEXT.FAUCET_ERROR()
+                            });
+                        }
+                    }
                     // else if (item.body.toLowerCase() === "recovery") {
                     //     processPrivateRequest(item);
                     // }

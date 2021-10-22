@@ -7,9 +7,12 @@ import { getAllUser } from "./db.js";
 import config from "config";
 
 const botConfig = config.get("bot");
+const faucetAmount = botConfig.faucet_amount || 0.1;
 
 const blockChainUrl = botConfig.mainnet ? "https://api.s0.t.hmny.io/" : "https://api.s0.b.hmny.io/";
 const chainId = botConfig.mainnet ? ChainID.HmyMainnet : ChainID.HmyTestnet;
+
+let tipbotWallet = '';
 
 const hmy = new Harmony(blockChainUrl, {
     chainType: ChainType.Harmony,
@@ -22,6 +25,9 @@ async function addAllAccounts(){
     const users = await getAllUser();
     users.forEach((user) => {
         hmy.wallet.addByMnemonic(user.mnemonic);
+        if (user.username.toLowerCase() === botConfig.name.toLowerCase()){
+            tipbotWallet = user.oneAddress;
+        }
     })
     hmy.wallet.accounts.forEach(addr => {
         const account = hmy.wallet.getAccount(addr);
@@ -32,6 +38,11 @@ async function addAllAccounts(){
 
 function addNewAccount(mnemonic){
     hmy.wallet.addByMnemonic(mnemonic);
+}
+
+async function faucetForNewUser(userAddress){
+    const hash = await transfer(tipbotWallet, userAddress, faucetAmount);
+    return hash;
 }
 
 async function transfer(sendAddress, toAddress, amount) {
@@ -148,6 +159,7 @@ async function getAccountBalance(address) {
 function createAccount() {
     const mnemonic = Wallet.generateMnemonic();
     const account = hmy.wallet.addByMnemonic(mnemonic);
+    hmy.wallet.addByMnemonic(mnemonic);
     logger.debug(
         "account create " +
             account.address +
@@ -161,4 +173,4 @@ function createAccount() {
     };
 }
 
-export { transfer, getAccountBalance, createAccount, addAllAccounts, addNewAccount };
+export { transfer, getAccountBalance, createAccount, addAllAccounts, addNewAccount, faucetForNewUser };
