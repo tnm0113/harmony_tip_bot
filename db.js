@@ -72,6 +72,10 @@ const TipLog = sequelize.define("TipLog", {
     action: {
         type: DataTypes.STRING,
     },
+    result: {
+        type: DataTypes.INTEGER, 
+        defaultValue: 0
+    }
 });
 
 TipLog.sync({});
@@ -130,7 +134,8 @@ const saveLog = function (
     amount,
     reddit_source,
     currency,
-    action
+    action,
+    result
 ) {
     logger.info("save log");
     return TipLog.create({
@@ -140,6 +145,7 @@ const saveLog = function (
         reddit_source: reddit_source,
         currency: currency,
         action: action,
+        result: result
     })
         .then((rs) => {
             return rs;

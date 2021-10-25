@@ -9,7 +9,7 @@ import config from "config";
 const botConfig = config.get("bot");
 const faucetAmount = botConfig.faucet_amount || 0.1;
 
-const blockChainUrl = botConfig.mainnet ? "https://api.s0.t.hmny.io/" : "https://api.s0.b.hmny.io/";
+const blockChainUrl = botConfig.mainnet ? "https://api1.s0.t.hmny.io/" : "https://api.s0.b.hmny.io/";
 const chainId = botConfig.mainnet ? ChainID.HmyMainnet : ChainID.HmyTestnet;
 
 let tipbotWallet = '';

@@ -155,21 +155,25 @@ async function processMention(item) {
         logger.debug("process in comment section");
         return;
     }
-    if (splitCms.findIndex((e) => e === '/u/' + botConfig.name) > -1 || 
-        splitCms.findIndex((e) => e === 'u/' + botConfig.name) > -1){
-        const index = splitCms.findIndex((e) => e === 'tip');
-        if (index > -1){
-            const sliceCms = splitCms.slice(index);
-            logger.debug("slicecms " + sliceCms);
-            if (sliceCms.length > 2) {
+
+    const indexSlice = splitCms.findIndex((e) => e.includes(botConfig.name));
+    
+    if (indexSlice > -1){
+        const sliceCms = splitCms.slice(indexSlice);
+        logger.debug("slicecms " + sliceCms);
+        // const index = splitCms.findIndex((e) => e === 'tip');
+        const commandAction = sliceCms[1];
+        const parseNumber = parseInt(commandAction);
+        if (sliceCms.length >= 3){
+            if (commandAction === 'tip'){
                 let amount = -1;
                 let currency = "";
                 let toUser = "";
-                if (sliceCms[1].match(regexUser)){
-                    if (sliceCms.length > 3){
-                        toUser = sliceCms[1].replace("/u/","").replace("u/","");
-                        amount = sliceCms[2];
-                        currency = sliceCms[3];
+                if (sliceCms[2].match(regexUser)){
+                    if (sliceCms.length > 4){
+                        toUser = sliceCms[2].replace("/u/","").replace("u/","");
+                        amount = sliceCms[3];
+                        currency = sliceCms[4];
                         logger.debug("send from comment to user " + toUser +  " amount " + amount);
                     } else {
                         item.reply(TEXT.TIP_FAILED(botConfig.name));
@@ -202,30 +206,74 @@ async function processMention(item) {
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
                         item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
+                        await saveLog(
+                            item.author.name,
+                            toUser,
+                            amount,
+                            item.id,
+                            currency,
+                            "tip",
+                            1
+                        );
                     } else {
                         logger.error("tip failed");
+                        await saveLog(
+                            item.author.name,
+                            toUser,
+                            amount,
+                            item.id,
+                            currency,
+                            "tip",
+                            0
+                        );
                         item.reply(TEXT.TIP_FAILED(botConfig.name));
                     }
                 } else {
                     item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
                 }
-                await saveLog(
-                    item.author.name,
-                    toUser,
-                    amount,
-                    item.id,
-                    currency,
-                    "tip"
-                );
+            } else if (!isNaN(parseNumber)){
+                let amount = parseInt(sliceCms[1]);
+                let toUser = sliceCms[2].replace("/u/","").replace("u/","");
+                const sendUserName = item.author.name.toLowerCase();
+                const sendUser = await findUser(sendUserName);
+                if (sendUser) {
+                    const txnHash = await tip(sendUser, toUser, amount);
+                    if (txnHash) {
+                        const txLink = explorerLink + txnHash;
+                        item.reply(TEXT.TIP_SUCCESS(amount, toUser, txLink));
+                        await saveLog(
+                            item.author.name,
+                            toUser,
+                            amount,
+                            item.id,
+                            'ONE',
+                            "tip",
+                            1
+                        );
+                    } else {
+                        logger.error("tip failed");
+                        item.reply(TEXT.TIP_FAILED(botConfig.name));
+                        await saveLog(
+                            item.author.name,
+                            toUser,
+                            amount,
+                            item.id,
+                            'ONE',
+                            "tip",
+                            0
+                        );
+                    }
+                } else {
+                    item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+                }
             } else {
-                logger.debug("other case");
                 item.reply(TEXT.INVALID_COMMAND(botConfig.name));
             }
         } else {
+            logger.debug('comment not a command');
             item.reply(TEXT.INVALID_COMMAND(botConfig.name));
         }
-        
-    } else {
+    }  else {
         logger.debug("comment mention is not a command");
     }
 }
@@ -462,21 +510,31 @@ async function processComment(item){
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
                         item.reply(TEXT.TIP_SUCCESS(amount, toUserName, txLink));
+                        await saveLog(
+                            item.author.name,
+                            toUserName,
+                            amount,
+                            item.id,
+                            'ONE',
+                            "tip",
+                            1
+                        );
                     } else {
                         logger.error("tip failed");
+                        await saveLog(
+                            item.author.name,
+                            toUserName,
+                            amount,
+                            item.id,
+                            'ONE',
+                            "tip",
+                            0
+                        );
                         item.reply(TEXT.TIP_FAILED(botConfig.name));
                     }
                 } else {
                     item.reply(TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
                 }
-                await saveLog(
-                    sendUserName,
-                    toUserName,
-                    amount,
-                    item.id,
-                    "ONE",
-                    "tip"
-                );
             } else {
                 logger.debug("comment item already process");
             }
