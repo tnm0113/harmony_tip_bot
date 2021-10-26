@@ -58,7 +58,7 @@ async function transfer(sendAddress, toAddress, amount) {
         const account = hmy.wallet.getAccount(sendAddress);
         // const nonce = await account.getShardNonce(0);
         let nonce = 0;
-        if (mapAccountNonce.get(sendAddress) === 0){
+        if (mapAccountNonce.get(sendAddress) === 0 || mapAccountNonce.get(sendAddress) === undefined){
             const data = await hmy.messenger.send(
                 RPCMethod.GetTransactionCount,
                 [sendAddress, 'latest'],
@@ -71,6 +71,9 @@ async function transfer(sendAddress, toAddress, amount) {
             nonce = mapAccountNonce.get(sendAddress) + 1;
         }
         logger.debug("account nonce " + nonce);
+        if (isNaN(nonce)){
+            nonce = 0;
+        }
         const txn = hmy.transactions.newTx({
             nonce: nonce,
             to: toAddress,
