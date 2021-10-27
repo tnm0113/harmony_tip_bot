@@ -75,10 +75,11 @@ export const PRIVATE_INFO = (mnemonic) => {
 export const SIGNATURE = (tip_bot_name) => {
     const base = "\n\n*****\n\n";
     const emojii = "♡ (っ◔◡◔)っ ♡";
+    const donation = ` | [Donate](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=Donating%20to%20the%20dev&message=send%201%20ONE%20/u/toannm)`
     const get_started = ` | [Get Started](https://www.reddit.com/r/harmony_one/wiki/harmonytipbot)`;
     const show_balance = ` | [Show my balance](https://www.reddit.com/message/compose/?to=${tip_bot_name}&subject=My%20info&message=info)`
     const end = " | ♡";
-    return base + emojii + get_started +  show_balance + end;
+    return base + emojii + get_started +  show_balance + donation + end;
 }
 
 export const CREATE_USER = (oneAddress, ethAddress) => {
