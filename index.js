@@ -360,7 +360,7 @@ async function processInfoRequest(item) {
     const info = await getBalance(item.author.name.toLowerCase());
     if (info) {
         const text = TEXT.INFO_REPLY(info.oneAddress, info.ethAddress, info.balance);
-        const subject = "Your account info:";
+        const subject = "Your account info";
         await sendMessage(item.author.name, subject, text);
     } else {
         const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
@@ -429,7 +429,7 @@ async function processWithdrawRequest(item) {
 async function processCreateRequest(item) {
     const user = await findOrCreate(item.author.name.toLowerCase());
     if (user) {
-        const subject = "Your account info:";
+        const subject = "Your account info";
         await sendMessage(item.author.name, subject, TEXT.CREATE_USER(user.oneAddress, user.ethAddress));
     }
 }
