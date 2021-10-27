@@ -36,7 +36,7 @@ client.config({
 
 async function sendMessage(to, subject, text) {
     try {
-        subject = "[TipBot Message] " + subject;
+        subject = "[OneTipBot Message] " + subject;
         logger.debug("send message " + subject +  " to " + to);
         await client.composeMessage({ to: to, subject: subject, text: text });
     } catch (error) {
