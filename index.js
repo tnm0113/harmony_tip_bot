@@ -306,12 +306,30 @@ async function processSendRequest(item) {
                             subject: "Send result",
                             text: TEXT.TIP_SUCCESS(amount, toUser, txLink)
                         });
+                        await saveLog(
+                            item.author.name.toLowerCase(),
+                            toUser,
+                            amount,
+                            item.id,
+                            currency,
+                            "send",
+                            1
+                        );
                     } else {
                         await client.composeMessage({
                             to: item.author.name,
                             subject: "Send result:",
                             text: TEXT.TIP_FAILED(botConfig.name)
                         });
+                        await saveLog(
+                            item.author.name.toLowerCase(),
+                            toUser,
+                            amount,
+                            item.id,
+                            currency,
+                            "send",
+                            0
+                        );
                     }
                 } else {
                     await client.composeMessage({
@@ -319,16 +337,17 @@ async function processSendRequest(item) {
                         subject: "Send result:",
                         text: TEXT.ACCOUNT_NOT_EXISTED(botConfig.name)
                     });
+                    await saveLog(
+                        item.author.name.toLowerCase(),
+                        toUser,
+                        amount,
+                        item.id,
+                        currency,
+                        "send",
+                        0
+                    );
                 }
             }
-            await saveLog(
-                item.author.name.toLowerCase(),
-                toUser,
-                amount,
-                item.id,
-                currency,
-                "send"
-            );
         } catch (error) {
             logger.error("process send request error " + JSON.stringify(error) + error);
         }
@@ -405,22 +424,32 @@ async function processWithdrawRequest(item) {
                     subject: "Widthdraw result",
                     text: TEXT.WITHDRAW_SUCCESS(txLink)
                 });
+                await saveLog(
+                    item.author.name.toLowerCase(),
+                    addressTo,
+                    amount,
+                    item.id,
+                    currency,
+                    "withdraw",
+                    1
+                );
             } else {
                 await client.composeMessage({
                     to: item.author.name,
                     subject: "Widthdraw result:",
                     text: TEXT.WITHDRAW_FAILED
                 });
+                await saveLog(
+                    item.author.name.toLowerCase(),
+                    addressTo,
+                    amount,
+                    item.id,
+                    currency,
+                    "withdraw",
+                    0
+                );
             }
         }
-        await saveLog(
-            item.author.name.toLowerCase(),
-            addressTo,
-            amount,
-            item.id,
-            currency,
-            "withdraw"
-        );
     }
 }
 
