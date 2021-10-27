@@ -32,12 +32,13 @@ export const TIP_FAILED = (tip_bot_name) => {
 //Info Reply:    
 //(Current is good. Leave as-is)
 export const INFO_REPLY = (one, eth, balance) => {
-    return `One Address: ${one}` +
-            `\n \n ` +
-            `Eth Address: ${eth}` +
-            `\n \n` +
-            `Balance:  ${balance}` +
-            ` ONE.${SIGNATURE(botConfig.name)}`;
+    return `[**Account Info**](https://explorer.harmony.one/address/${one}) \n\n` +
+            `Info | Value \n` + 
+            `| :-: | :-: \n` +
+            `One Address | ${one} \n` + 
+            `Eth Address | ${eth} \n` +
+            `Balance | ${balance} ONE`+
+            `${SIGNATURE(botConfig.name)}`; 
 }
       
 //Withdraw Reply:    
