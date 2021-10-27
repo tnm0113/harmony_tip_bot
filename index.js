@@ -36,6 +36,7 @@ client.config({
 
 async function sendMessage(to, subject, text) {
     try {
+        subject = "[TipBot Message] " + subject;
         logger.debug("send message " + subject +  " to " + to);
         await client.composeMessage({ to: to, subject: subject, text: text });
     } catch (error) {
@@ -115,11 +116,7 @@ async function returnHelp(username) {
         `- 'help' - Get this help message.`+
         `${TEXT.SIGNATURE(botConfig.name)}`;
     try {
-        await client.composeMessage({
-            to: username,
-            subject: "Tip Bot Help",
-            text: helpText,
-        });
+        await sendMessage(username, "Tip Bot Help", helpText);
     } catch (error) {
         logger.error("return help error " + JSON.stringify(error) + error);
     }
@@ -142,15 +139,15 @@ async function processMention(item) {
         .split(/\s+/g);
     logger.debug("split cms " + splitCms);
 
-    if (item.body.toLowerCase() === "!faucet"){
-        const rs = await processFaucetRequest(item);
-        if (rs){
-            item.reply(TEXT.FAUCET_SUCCESS);
-        } else {
-            item.reply(TEXT.FAUCET_ERROR);
-        }
-        return;
-    }
+    // if (item.body.toLowerCase() === "!faucet"){
+    //     const rs = await processFaucetRequest(item);
+    //     if (rs){
+    //         item.reply(TEXT.FAUCET_SUCCESS);
+    //     } else {
+    //         item.reply(TEXT.FAUCET_ERROR);
+    //     }
+    //     return;
+    // }
     if (splitCms.findIndex((e) => e === botConfig.command) > -1){
         logger.debug("process in comment section");
         return;
@@ -291,21 +288,13 @@ async function processSendRequest(item) {
             const toUser = splitBody[3].match(regexUser) ? splitBody[3].replace("/u/","").replace("u/","") : splitBody[3];
             const fromUser = await findUser(item.author.name.toLowerCase());
             if (currency.toLowerCase() != "one"){
-                await client.composeMessage({
-                    to: item.author.name,
-                    subject: "Send result",
-                    text:"Tip bot only support ONE currently !!"
-                });
+                await sendMessage(item.author.name, "Send result", "Tip bot only support ONE currently !!");
             } else {
                 if (fromUser) {
                     const txnHash = await tip(fromUser, toUser, amount);
                     if (txnHash) {
                         const txLink = explorerLink + txnHash;
-                        await client.composeMessage({
-                            to: item.author.name,
-                            subject: "Send result",
-                            text: TEXT.TIP_SUCCESS(amount, toUser, txLink)
-                        });
+                        await sendMessage(item.author.name, "Send result", TEXT.TIP_SUCCESS(amount, toUser, txLink));
                         await saveLog(
                             item.author.name.toLowerCase(),
                             toUser,
@@ -316,11 +305,7 @@ async function processSendRequest(item) {
                             1
                         );
                     } else {
-                        await client.composeMessage({
-                            to: item.author.name,
-                            subject: "Send result:",
-                            text: TEXT.TIP_FAILED(botConfig.name)
-                        });
+                        await sendMessage(item.author.name, "Send result", TEXT.TIP_FAILED(botConfig.name));
                         await saveLog(
                             item.author.name.toLowerCase(),
                             toUser,
@@ -332,11 +317,7 @@ async function processSendRequest(item) {
                         );
                     }
                 } else {
-                    await client.composeMessage({
-                        to: item.author.name,
-                        subject: "Send result:",
-                        text: TEXT.ACCOUNT_NOT_EXISTED(botConfig.name)
-                    });
+                    await sendMessage(item.author.name, "Send result", TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
                     await saveLog(
                         item.author.name.toLowerCase(),
                         toUser,
@@ -358,7 +339,8 @@ async function processFaucetRequest(item){
     const username = item.author.name.toLowerCase();
     const user = await findUser(username);
     if (user){
-        return;
+        logger.debug('user ' + username + ' already have account');
+        return -1;
     }
     const newUserInfo = createAccount();
     await createUser(
@@ -368,7 +350,10 @@ async function processFaucetRequest(item){
         newUserInfo.mnemonic
     );
     const rs = await faucetForNewUser(newUserInfo.oneAddress);
-    return rs;
+    if (rs){
+        return 1
+    }
+    return 0;
 }
 
 async function processInfoRequest(item) {
@@ -410,20 +395,12 @@ async function processWithdrawRequest(item) {
         const user = await findUser(item.author.name.toLowerCase());
         const fromUserAddress = user.ethAddress;
         if (currency != "one"){
-            await client.composeMessage({
-                to: item.author.name,
-                subject: "Widthdraw result",
-                text:"Tip bot only support ONE currently !!"
-            });
+            await sendMessage(item.author.name, "Widthdraw result", "Tip bot only support ONE currently !!");
         } else {
             const txnHash = await transfer(fromUserAddress, addressTo, amount);
             if (txnHash){
                 const txLink = explorerLink + txnHash;
-                await client.composeMessage({
-                    to: item.author.name,
-                    subject: "Widthdraw result",
-                    text: TEXT.WITHDRAW_SUCCESS(txLink)
-                });
+                await sendMessage(item.author.name, "Widthdraw result", TEXT.WITHDRAW_SUCCESS(txLink));
                 await saveLog(
                     item.author.name.toLowerCase(),
                     addressTo,
@@ -434,11 +411,7 @@ async function processWithdrawRequest(item) {
                     1
                 );
             } else {
-                await client.composeMessage({
-                    to: item.author.name,
-                    subject: "Widthdraw result:",
-                    text: TEXT.WITHDRAW_FAILED
-                });
+                await sendMessage(item.author.name, "Widthdraw result", TEXT.WITHDRAW_FAILED);
                 await saveLog(
                     item.author.name.toLowerCase(),
                     addressTo,
@@ -629,18 +602,12 @@ try {
                         processWithdrawRequest(item);
                     } else if (item.body.toLowerCase() === "faucet") {
                         const result = await processFaucetRequest(item);
-                        if (result){
-                            await client.composeMessage({
-                                to: item.author.name,
-                                subject: "Faucet result",
-                                text: TEXT.FAUCET_SUCCESS()
-                            });
-                        } else {
-                            await client.composeMessage({
-                                to: item.author.name,
-                                subject: "Faucet result",
-                                text: TEXT.FAUCET_ERROR()
-                            });
+                        if (result === 1){
+                            await sendMessage(item.author.name, "Faucet result", TEXT.FAUCET_SUCCESS());
+                        } else if (result === -1){
+                            await sendMessage(item.author.name, "Faucet result", `You already have account !${TEXT.SIGNATURE(botConfig.name)}`);
+                        } else if (result === 0){
+                            await sendMessage(item.author.name, "Faucet result", TEXT.FAUCET_ERROR());
                         }
                     }
                     // else if (item.body.toLowerCase() === "recovery") {

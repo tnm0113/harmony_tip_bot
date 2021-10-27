@@ -48,11 +48,11 @@ export const WITHDRAW_SUCCESS = (txlink) => {
 }
 
 export const FAUCET_SUCCESS = () => {
-    return `Your account had been created and some ONEs just been sent to your wallet, enjoy it !!!`;
+    return `Your account had been created and some ONEs just been sent to your wallet, enjoy it !!!${SIGNATURE(botConfig.name)}`;
 }
 
 export const FAUCET_ERROR = () => {
-    return `Your account had been created but we dont have enough ONEs to give you, please contact mods !!!`;
+    return `Your account had been created but we dont have enough ONEs to give you, please contact mods !!!${SIGNATURE(botConfig.name)}`;
 }
 
 //Withdraw Failure:
