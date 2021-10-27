@@ -70,10 +70,10 @@ async function transfer(sendAddress, toAddress, amount) {
         } else {
             nonce = mapAccountNonce.get(sendAddress) + 1;
         }
-        logger.debug("account nonce " + nonce);
         if (isNaN(nonce)){
             nonce = 0;
         }
+        logger.debug("account nonce " + nonce);
         const txn = hmy.transactions.newTx({
             nonce: nonce,
             to: toAddress,
