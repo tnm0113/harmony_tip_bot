@@ -154,9 +154,13 @@ async function getAccountBalance(address) {
         if (!balance){
             return null;
         }
-        logger.debug("balance get from blockchain " + JSON.stringify(balance));
+        console.log('balance ' + balance);
+        logger.debug('balance ' + balance);
+        // logger.debug("balance get from blockchain " + JSON.stringify(balance));
         const result = new Unit(balance.balance).asWei().toOne();
-        logger.info("real balance in ONE " + result);
+        console.log('result ' + result);
+        logger.debug('result ' + result);
+        // logger.info("real balance in ONE " + result);
         return result;
     } catch (error) {
         logger.error("get balance error " + error);
