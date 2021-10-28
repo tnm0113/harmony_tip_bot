@@ -85,14 +85,15 @@ async function transfer(sendAddress, toAddress, amount) {
         });
         mapAccountNonce.set(sendAddress, nonce);
         const signedTxn = await account.signTransaction(txn, false);
-        const tx = hmy.transactions.recover(signedTxn.getRawTransaction());
-        logger.debug('tx ' + JSON.stringify(tx));
+        // const tx = hmy.transactions.recover(signedTxn.getRawTransaction());
+        // logger.debug('tx ' + JSON.stringify(tx));
         const res = await sendTransaction(signedTxn);
         logger.info("res send transaction " + JSON.stringify(res));
         if (res.result) {
             return res.txnHash;
         } else {
             logger.error("txn hash error " + res.mesg);
+            mapAccountNonce.set(sendAddress, 0);
             return null;
         }
     } catch (err) {
