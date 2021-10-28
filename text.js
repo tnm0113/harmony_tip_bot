@@ -64,7 +64,7 @@ export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
 }
 
 export const GET_BALANCE_ERROR = () => {
-    return `Getting balance failed, there is something went wrong, please contact with dev !!`;
+    return `Error: unable to retrieve balance. Please contact the dev !!`;
 }
 
 export const INVALID_COMMAND = (tip_bot_name) => {

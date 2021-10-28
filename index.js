@@ -380,6 +380,12 @@ async function processWithdrawRequest(item) {
         const currency = splitBody[2];
         const addressTo = splitBody[3];
         const user = await findUser(item.author.name.toLowerCase());
+        if (!user){
+            logger.error('user dont have account yet');
+            await sendMessage(item.author.name, "Widthdraw result", TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+            return;
+        }
+        logger.debug('user ' + user + ' request withdraw ' + amount + ' ONE');
         const fromUserAddress = user.ethAddress;
         if (currency != "one"){
             await sendMessage(item.author.name, "Widthdraw result", "Tip bot only support ONE currently !!");
