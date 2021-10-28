@@ -66,24 +66,6 @@ async function tip(fromUser, toUserName, amount) {
     }
 }
 
-async function getBalance(username) {
-    try {
-        const user = await findUser(username);
-        if (user) {
-            const b = await getAccountBalance(user.ethAddress);
-            return {
-                oneAddress: user.oneAddress,
-                ethAddress: user.ethAddress,
-                balance: b,
-            };
-        } else {
-            return null;
-        }
-    } catch (error) {
-        logger.error("get balance error " + JSON.stringify(error) + error);
-    }
-}
-
 async function findOrCreate(username) {
     try {
         const u = await findUser(username);
@@ -357,14 +339,19 @@ async function processFaucetRequest(item){
 }
 
 async function processInfoRequest(item) {
-    const info = await getBalance(item.author.name.toLowerCase());
-    if (info) {
-        const text = TEXT.INFO_REPLY(info.oneAddress, info.ethAddress, info.balance);
+    const user = await findUser(item.author.name.toLowerCase());
+    if (!user){
+        await sendMessage(item.author.name, "Your account info", TEXT.ACCOUNT_NOT_EXISTED(botConfig.name));
+        return;
+    }
+    const balance = await getAccountBalance(user.ethAddress);
+    if (balance) {
+        const text = TEXT.INFO_REPLY(user.oneAddress, user.ethAddress, balance);
         const subject = "Your account info";
         await sendMessage(item.author.name, subject, text);
     } else {
-        const text = TEXT.ACCOUNT_NOT_EXISTED(botConfig.name);
-        const subject = "Help message";
+        const text = TEXT.GET_BALANCE_ERROR();
+        const subject = "Your account info";
         await sendMessage(item.author.name, subject, text);
     }
 }

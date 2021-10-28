@@ -63,6 +63,10 @@ export const ACCOUNT_NOT_EXISTED = (tip_bot_name) => {
     return `Your account does not exist. Please send "CREATE" or "REGISTER" in private message to the tip bot by clicking [HERE](${linkPm}).${SIGNATURE(botConfig.name)}`;
 }
 
+export const GET_BALANCE_ERROR = () => {
+    return `Getting balance failed, there is something went wrong, please contact with dev !!`;
+}
+
 export const INVALID_COMMAND = (tip_bot_name) => {
     const linkPm = linkPmReddit(tip_bot_name, "Get Help", "help");
     return `Invalid command, please send "HELP" in private message to the tip bot by clicking [HERE](${linkPm}).${SIGNATURE(botConfig.name)}`

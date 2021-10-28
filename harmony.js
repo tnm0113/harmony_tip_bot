@@ -150,12 +150,16 @@ async function getAccountBalance(address) {
         // const account = hmy.wallet.addByMnemonic(mnemonic);
         const account = hmy.wallet.getAccount(address);
         const balance = await account.getBalance();
+        if (!balance){
+            return null;
+        }
         logger.debug("balance get from blockchain " + JSON.stringify(balance));
         const result = new Unit(balance.balance).asWei().toOne();
         logger.info("real balance in ONE " + result);
         return result;
     } catch (error) {
         logger.error("get balance error " + error);
+        return null;
     }
 }
 
