@@ -78,7 +78,7 @@ async function transfer(sendAddress, toAddress, amount) {
             nonce: nonce,
             to: toAddress,
             value: new Unit(parseFloat(amount)).asOne().toWei(),
-            gasLimit: "25000",
+            gasLimit: "31000",
             shardID: 0,
             toShardID: 0,
             gasPrice: new Unit("1").asGwei().toWei(),
