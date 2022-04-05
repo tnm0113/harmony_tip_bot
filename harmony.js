@@ -81,7 +81,7 @@ async function transfer(sendAddress, toAddress, amount) {
             gasLimit: "21000",
             shardID: 0,
             toShardID: 0,
-            gasPrice: new Unit("30").asGwei().toWei(),
+            gasPrice: new Unit("40").asGwei().toWei(),
         });
         mapAccountNonce.set(sendAddress, nonce);
         const signedTxn = await account.signTransaction(txn, false);
